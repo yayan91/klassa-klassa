@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>K L A S S A</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: { primary: '#4f46e5', secondary: '#0f172a', bg: '#f8fafc' },
+                    animation: { 'blob': 'blob 7s infinite', 'slide-up': 'slideUp 0.3s ease-out' },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; color: #334155; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 6px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        .active-nav { color: #4f46e5; background-color: #eef2ff; font-weight: 800; border-right: 3px solid #4f46e5; }
+        .dark .active-nav { color: #818cf8; background-color: #1e293b; border-right: 3px solid #818cf8; }
+        
+        .status-radio:checked + div { transform: scale(1.05); color: white; border-color: transparent; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .r-h:checked + div { background: linear-gradient(135deg, #10b981, #059669); } 
+        .r-s:checked + div { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .r-i:checked + div { background: linear-gradient(135deg, #3b82f6, #2563eb); } 
+        .r-a:checked + div { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        .jam-btn.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        /* Style baru untuk Kategori Catatan */
+        .cat-btn.selected { transform: scale(1.02); ring-width: 2px; --tw-ring-color: #4f46e5; font-weight: 800; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
+        .dark .cat-btn.selected { background-color: #312e81; color: #a5b4fc; border-color: #6366f1; }
+
+        .bg-login-pattern { background-color: #0f172a; background-image: radial-gradient(#4f46e5 1px, transparent 1px); background-size: 40px 40px; }
+        .card-grad-h { background: white; border-left: 5px solid #10b981; }
+        .card-grad-s { background: white; border-left: 5px solid #f59e0b; }
+        .card-grad-i { background: white; border-left: 5px solid #3b82f6; }
+        .card-grad-a { background: white; border-left: 5px solid #ef4444; }
+        .dark .card-grad-h, .dark .card-grad-s, .dark .card-grad-i, .dark .card-grad-a { background: #1e293b; border-color: inherit; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300">
+
+    <div id="loader" class="fixed inset-0 z-[100] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm hidden flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-14 w-14 border-[5px] border-primary border-t-transparent"></div>
+        <p class="mt-4 text-xs font-bold text-primary tracking-[0.3em] animate-pulse">MEMPROSES...</p>
+    </div>
+
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-login-pattern p-6 relative overflow-hidden">
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div class="absolute top-0 -right-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+
+        <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl w-full max-w-sm p-8 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-slate-700 relative z-10">
+            <button onclick="showAppInfo()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-primary transition flex items-center justify-center shadow-sm"><i class="fa-solid fa-question"></i></button>
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 rounded-3xl bg-white dark:bg-slate-800 mb-4 shadow-lg">
+                    <img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-16 h-16 object-contain">
+                </div>
+                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">KLA<span class="text-primary">SSA</span></h1>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">UPT SPF SMP Negeri 16 Makassar</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-5">
+                <div class="relative group"><i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition"></i><input type="text" id="username" class="w-full pl-11 pr-4 py-4 rounded-2xl border-0 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition font-semibold" placeholder="Username" required></div>
+                <div class="relative group"><i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition"></i><input type="password" id="password" class="w-full pl-11 pr-4 py-4 rounded-2xl border-0 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition font-semibold" placeholder="Password" required></div>
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition duration-300">Masuk Guru</button>
+            </form>
+            <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <button onclick="togglePublic(true)" class="w-full py-3 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-slate-700 text-xs font-bold text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:border-indigo-300 transition flex justify-center items-center gap-2 group"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> LIHAT REKAP ABSEN <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden flex-1 flex h-full">
+        <aside id="sidebar" class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col h-full z-20 shadow-2xl">
+            <div class="h-24 flex items-center px-8 border-b border-slate-50 dark:border-slate-800 gap-3">
+                <img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-10 h-10 object-contain">
+                <span class="font-extrabold text-2xl text-slate-800 dark:text-white tracking-tight">KLASSA.</span>
+            </div>
+            <div class="p-6">
+                <div class="bg-slate-900 dark:bg-slate-800 p-5 rounded-2xl text-white shadow-xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 transition group-hover:scale-150"></div>
+                    <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1" id="greetingText">Halo,</p>
+                    <p class="text-lg font-bold truncate" id="sidebarName">User</p>
+                    <p class="text-xs text-indigo-300 truncate mt-0.5" id="sidebarMapel">Mapel</p>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto py-2">
+                <button onclick="switchPage('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition active-nav"><i class="fa-solid fa-grid-2 w-5"></i> Dashboard</button>
+                <button onclick="switchPage('input')" id="nav-input" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition"><i class="fa-solid fa-user-check w-5"></i> Input Absen</button>
+                <button onclick="switchPage('nilai')" id="nav-nilai" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition"><i class="fa-solid fa-star w-5"></i> Input Nilai</button>
+                <button onclick="switchPage('jurnal')" id="nav-jurnal" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition"><i class="fa-solid fa-book-open w-5"></i> Jurnal Guru</button>
+                <button onclick="switchPage('catatan')" id="nav-catatan" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition"><i class="fa-solid fa-clipboard-user w-5"></i> Catatan Siswa</button>
+                <button onclick="switchPage('rekap')" id="nav-rekap" class="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-primary transition"><i class="fa-solid fa-file-invoice w-5"></i> Laporan</button>
+            </nav>
+            <div class="p-6 border-t border-slate-50 dark:border-slate-800 space-y-3">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i> <span id="themeText">Mode Gelap</span></button>
+                <button onclick="confirmLogout()" class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 transition"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors">
+            <header class="md:hidden h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b dark:border-slate-800 flex items-center px-5 justify-between sticky top-0 z-30">
+                <div class="flex items-center gap-3"><img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-8 h-8 object-contain"><span class="font-bold text-lg text-slate-800 dark:text-white">SiAbsen</span></div>
+                <div class="flex gap-2"><button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i></button><button onclick="confirmLogout()" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center"><i class="fa-solid fa-power-off"></i></button></div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-5 md:p-10 pb-28 md:pb-10">
+                
+                <div id="page-dashboard" class="page-content space-y-8 animate-fade-in">
+                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
+                        <button onclick="switchDashContent('absen')" id="btnDashAbsen" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-pie"></i> MONITORING ABSENSI</button>
+                        <button onclick="switchDashContent('nilai')" id="btnDashNilai" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-line"></i> MONITORING NILAI</button>
+                    </div>
+
+                    <div id="dash-absen" class="space-y-8 animate-fade-in">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div><h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight" id="dashGreeting">Dashboard Absensi</h2><p class="text-slate-500 dark:text-slate-400 font-medium">Statistik Kehadiran Siswa.</p></div>
+                            <div class="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 inline-flex"><button onclick="switchDashView('today')" id="btnViewToday" class="px-5 py-2 rounded-lg text-xs font-extrabold bg-primary text-white shadow-md transition">HARI INI</button><button onclick="switchDashView('total')" id="btnViewTotal" class="px-5 py-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition">TOTAL</button></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                            <div class="card-grad-h p-6 rounded-2xl shadow-sm dark:shadow-none hover:shadow-md transition"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded">Hadir</span><i class="fa-solid fa-user-check text-emerald-200 dark:text-emerald-800 text-xl"></i></div><span class="text-4xl font-extrabold text-slate-800 dark:text-white block" id="statH">0</span></div>
+                            <div class="card-grad-s p-6 rounded-2xl shadow-sm dark:shadow-none hover:shadow-md transition"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded">Sakit</span><i class="fa-solid fa-bed-pulse text-amber-200 dark:text-amber-800 text-xl"></i></div><span class="text-4xl font-extrabold text-slate-800 dark:text-white block" id="statS">0</span></div>
+                            <div class="card-grad-i p-6 rounded-2xl shadow-sm dark:shadow-none hover:shadow-md transition"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">Izin</span><i class="fa-solid fa-paper-plane text-blue-200 dark:text-blue-800 text-xl"></i></div><span class="text-4xl font-extrabold text-slate-800 dark:text-white block" id="statI">0</span></div>
+                            <div class="card-grad-a p-6 rounded-2xl shadow-sm dark:shadow-none hover:shadow-md transition"><div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">Alpa</span><i class="fa-solid fa-circle-xmark text-red-200 dark:text-red-800 text-xl"></i></div><span class="text-4xl font-extrabold text-slate-800 dark:text-white block" id="statA">0</span></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-lg lg:col-span-2"><h3 class="font-bold text-slate-800 dark:text-white mb-6 text-sm uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-chart-column text-indigo-500"></i> Grafik Per Kelas</h3><div class="h-64 w-full"><canvas id="chartBar"></canvas></div></div>
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-lg flex flex-col items-center justify-center"><h3 class="font-bold text-slate-800 dark:text-white mb-6 text-sm uppercase tracking-wide self-start w-full border-b dark:border-slate-800 pb-2">Komposisi</h3><div class="h-48 w-48 relative"><canvas id="chartDoughnut"></canvas></div></div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-red-100 dark:border-red-900/50 shadow-xl shadow-red-500/5 overflow-hidden">
+                            <div class="p-5 bg-gradient-to-r from-red-50 to-white dark:from-red-900/20 dark:to-slate-900 border-b border-red-50 dark:border-red-900/20 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-red-600 dark:text-red-200 animate-pulse"><i class="fa-solid fa-triangle-exclamation"></i></div><h3 class="font-extrabold text-red-700 dark:text-red-400 uppercase text-sm tracking-wide">Peringatan Dini (Top 5 Alpa)</h3></div>
+                            <div class="p-5"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-400 uppercase font-bold bg-slate-50 dark:bg-slate-800"><tr><th class="p-3 rounded-l-lg">Siswa</th><th class="p-3">Kelas</th><th class="p-3 text-right rounded-r-lg">Total Alpa</th></tr></thead><tbody id="topAlpaList" class="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300"><tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Memuat data...</td></tr></tbody></table></div>
+                        </div>
+                    </div>
+
+                    <div id="dash-nilai" class="space-y-8 hidden animate-fade-in">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div><h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Statistik Penilaian</h2><p class="text-slate-500 dark:text-slate-400 font-medium" id="mapelTitle">Analisis Akademik Siswa.</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden"><div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div><p class="text-xs font-bold text-indigo-200 uppercase tracking-widest">Rata-Rata Total</p><h3 class="text-4xl font-extrabold mt-2" id="dnAvg">-</h3><p class="text-xs mt-2 text-indigo-100">Seluruh Siswa</p></div>
+                            <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden"><div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div><p class="text-xs font-bold text-emerald-200 uppercase tracking-widest">Nilai Tertinggi</p><h3 class="text-4xl font-extrabold mt-2" id="dnHigh">-</h3><p class="text-xs mt-2 text-emerald-100 truncate" id="dnHighName">-</p></div>
+                            <div class="bg-gradient-to-br from-rose-500 to-rose-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden"><div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div><p class="text-xs font-bold text-rose-200 uppercase tracking-widest">Nilai Terendah</p><h3 class="text-4xl font-extrabold mt-2" id="dnLow">-</h3><p class="text-xs mt-2 text-rose-100 truncate" id="dnLowName">-</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-lg lg:col-span-2"><h3 class="font-bold text-slate-800 dark:text-white mb-6 text-sm uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-chart-column text-amber-500"></i> Rata-Rata Per Kelas</h3><div class="h-64 w-full"><canvas id="chartNilaiBar"></canvas></div></div>
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-lg flex flex-col items-center justify-center"><h3 class="font-bold text-slate-800 dark:text-white mb-6 text-sm uppercase tracking-wide self-start w-full border-b dark:border-slate-800 pb-2">Sebaran Nilai</h3><div class="h-48 w-48 relative"><canvas id="chartNilaiDonat"></canvas></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-emerald-100 dark:border-emerald-900/50 shadow-xl overflow-hidden"><div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-900/20 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-200"><i class="fa-solid fa-trophy"></i></div><h3 class="font-extrabold text-emerald-700 dark:text-emerald-400 uppercase text-xs tracking-wide">Top 10 Berprestasi</h3></div><div class="p-4"><table class="w-full text-xs text-left"><thead class="text-slate-400 font-bold uppercase"><tr><th class="pb-2">Nama</th><th class="pb-2 text-center">Kls</th><th class="pb-2 text-right">Nilai</th></tr></thead><tbody id="top10List" class="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-300"></tbody></table></div></div>
+                            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-red-100 dark:border-red-900/50 shadow-xl overflow-hidden"><div class="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-900/20 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center text-red-600 dark:text-red-200"><i class="fa-solid fa-circle-exclamation"></i></div><h3 class="font-extrabold text-red-700 dark:text-red-400 uppercase text-xs tracking-wide">10 Perlu Bimbingan</h3></div><div class="p-4"><table class="w-full text-xs text-left"><thead class="text-slate-400 font-bold uppercase"><tr><th class="pb-2">Nama</th><th class="pb-2 text-center">Kls</th><th class="pb-2 text-right">Nilai</th></tr></thead><tbody id="bot10List" class="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-300"></tbody></table></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-input" class="page-content hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 sticky top-0 z-20 flex flex-col md:flex-row gap-3">
+                        <input type="date" id="inputDate" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                        <select id="inputKelas" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
+                    </div>
+                    <div class="relative"><i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchStudent" onkeyup="filterStudents()" class="w-full bg-white dark:bg-slate-900 pl-11 pr-4 py-3.5 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm transition dark:text-white" placeholder="Cari nama siswa..."></div>
+                    <div id="inputList" class="space-y-3"></div>
+                    <div id="fabSave" class="fixed bottom-24 right-6 z-50 hidden"><button onclick="saveAbsen()" class="bg-indigo-600 hover:bg-indigo-700 text-white pl-6 pr-8 py-4 rounded-full shadow-2xl shadow-indigo-500/40 font-extrabold flex items-center gap-3 transition transform hover:scale-105"><i class="fa-solid fa-floppy-disk text-xl"></i> SIMPAN ABSEN</button></div>
+                </div>
+
+                <div id="page-nilai" class="page-content hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4">
+                        <h3 class="font-extrabold text-lg text-slate-800 dark:text-white flex items-center gap-2 border-b dark:border-slate-800 pb-3"><i class="fa-solid fa-star text-amber-500"></i> Input Penilaian</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                             <select id="nilaiKelas" onchange="loadNilaiStudents()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary"><option value="">- Pilih Kelas -</option></select>
+                             <select id="nilaiJenis" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary">
+                                <option value="Tugas">Tugas</option>
+                                <option value="Praktek">Praktek</option>
+                                <option value="UH">Ulangan Harian</option>
+                                <option value="UTS">UTS (Tengah Semester)</option>
+                                <option value="UAS">UAS (Akhir Semester)</option>
+                             </select>
+                        </div>
+                        <input type="text" id="nilaiTopik" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary" placeholder="Topik / Keterangan (Wajib diisi, misal: 'Tugas 1 Pantun')">
+                        <button onclick="loadNilaiStudents()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-900 transition">MUAT SISWA</button>
+                    </div>
+                    <div id="nilaiListWrapper" class="hidden">
+                        <div class="flex justify-between items-center px-2 mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Daftar Siswa</span><span class="text-xs text-slate-400 italic">*Biarkan kosong jika belum dinilai</span></div>
+                        <div id="nilaiList" class="space-y-2"></div>
+                        <div class="fixed bottom-24 right-6 z-50"><button onclick="saveNilai()" class="bg-amber-500 hover:bg-amber-600 text-white pl-6 pr-8 py-4 rounded-full shadow-2xl shadow-amber-500/40 font-extrabold flex items-center gap-3 transition transform hover:scale-105"><i class="fa-solid fa-save text-xl"></i> SIMPAN NILAI</button></div>
+                    </div>
+                </div>
+
+                <div id="page-jurnal" class="page-content hidden space-y-6 animate-fade-in">
+                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
+                        <button onclick="switchJurnalTab('input')" id="btnJurnalInput" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-pen-to-square"></i> ISI JURNAL</button>
+                        <button onclick="switchJurnalTab('history')" id="btnJurnalHist" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> RIWAYAT</button>
+                    </div>
+                    <div id="jurnal-input" class="space-y-6">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                            <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Formulir Jurnal</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <input type="date" id="jurDate" onchange="loadAbsenStats()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                                <select id="jurKelas" onchange="loadAbsenStats()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
+                            </div>
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl mb-6 flex justify-around items-center border border-indigo-100 dark:border-indigo-800">
+                                <div class="text-center"><p class="text-[10px] uppercase text-indigo-400 font-bold">Total Siswa</p><p id="jurStatTotal" class="text-xl font-black text-indigo-600 dark:text-indigo-300">0</p></div>
+                                <div class="w-px h-8 bg-indigo-200 dark:bg-indigo-800"></div>
+                                <div class="text-center"><p class="text-[10px] uppercase text-emerald-500 font-bold">Hadir</p><p id="jurStatHadir" class="text-xl font-black text-emerald-600 dark:text-emerald-400">0</p></div>
+                                <div class="w-px h-8 bg-indigo-200 dark:bg-indigo-800"></div>
+                                <div class="text-center"><p class="text-[10px] uppercase text-rose-500 font-bold">Tidak Hadir</p><p id="jurStatAbsen" class="text-xl font-black text-rose-600 dark:text-rose-400">0</p></div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">Jam Mengajar (Pilih Banyak)</label>
+                                <div class="grid grid-cols-6 gap-2" id="jamContainer"></div>
+                                <input type="hidden" id="jurJam">
+                            </div>
+                            <div class="space-y-4">
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Materi Pokok</label><textarea id="jurMateri" class="w-full h-20 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary outline-none transition" placeholder="Tulis materi pembelajaran..."></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-slate-500 uppercase">Metode</label><select id="jurMetode" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary outline-none"><option value="Ceramah/Penjelasan">Ceramah/Penjelasan</option><option value="Diskusi Kelompok">Diskusi Kelompok</option><option value="Presentasi">Presentasi</option><option value="Praktek/Demonstrasi">Praktek/Demonstrasi</option><option value="PBL (Problem Based)">PBL (Problem Based)</option><option value="Lainnya">Lainnya</option></select></div>
+                                    <div><label class="text-xs font-bold text-slate-500 uppercase">Tindak Lanjut</label><input type="text" id="jurTindak" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary outline-none" placeholder="Contoh: PR, Tugas, Ulangan"></div>
+                                </div>
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Catatan / Kendala</label><textarea id="jurCatatan" class="w-full h-16 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary outline-none transition" placeholder="Catatan khusus..."></textarea></div>
+                            </div>
+                            <div class="mt-6 flex gap-3">
+                                <button onclick="copyLastJurnal()" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i class="fa-solid fa-copy mr-2"></i> SALIN TERAKHIR</button>
+                                <button onclick="saveJurnal()" class="flex-[2] py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition transform hover:scale-105"><i class="fa-solid fa-save mr-2"></i> SIMPAN JURNAL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="jurnal-history" class="space-y-6 hidden">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="font-extrabold text-lg text-slate-800 dark:text-white">Riwayat Mengajar</h2>
+                                <button onclick="generateJurnalPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:bg-red-700 transition"><i class="fa-solid fa-file-pdf mr-2"></i> CETAK BULAN INI</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left">
+                                    <thead class="text-slate-400 uppercase font-bold bg-slate-50 dark:bg-slate-800">
+                                        <tr><th class="p-3">Tgl</th><th class="p-3">Kls</th><th class="p-3">Jam</th><th class="p-3">Materi</th><th class="p-3 text-center">Ket</th><th class="p-3 text-center">Aksi</th></tr>
+                                    </thead>
+                                    <tbody id="jurHistoryList" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                                        <tr><td colspan="6" class="p-4 text-center italic text-slate-400">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-catatan" class="page-content hidden space-y-6 animate-fade-in">
+                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
+                        <button onclick="switchCatatanTab('input')" id="btnCatInput" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-file-pen"></i> INPUT CATATAN</button>
+                        <button onclick="switchCatatanTab('history')" id="btnCatHist" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-list-check"></i> RIWAYAT KASUS</button>
+                    </div>
+
+                    <div id="catatan-input" class="space-y-6">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                            <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4 border-b dark:border-slate-700 pb-2 flex items-center gap-2"><i class="fa-solid fa-user-shield text-indigo-500"></i> Bimbingan & Konseling</h2>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <input type="date" id="catDate" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                                <select id="catKelas" onchange="loadCatatanStudents()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
+                            </div>
+                            <div class="mb-6 relative">
+                                <select id="catSiswa" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition" disabled><option value="">- Pilih Siswa (Pilih Kelas Dulu) -</option></select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3 block">Kategori Kejadian</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button onclick="selectCat(this, 'Kedisiplinan & Tata Tertib')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-gavel mr-1 text-red-500"></i> Kedisiplinan</button>
+                                    <button onclick="selectCat(this, 'Kehadiran & Punctuality')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-clock mr-1 text-amber-500"></i> Kehadiran</button>
+                                    <button onclick="selectCat(this, 'Kerapian & Atribut')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-shirt mr-1 text-blue-500"></i> Kerapian</button>
+                                    <button onclick="selectCat(this, 'Sikap & Perilaku Sosial')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-users mr-1 text-indigo-500"></i> Sikap Sosial</button>
+                                    <button onclick="selectCat(this, 'Akademik & Tanggung Jawab')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-book mr-1 text-purple-500"></i> Akademik</button>
+                                    <button onclick="selectCat(this, 'Kebersihan & Lingkungan')" class="cat-btn border border-slate-200 dark:border-slate-700 p-3 rounded-xl text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-trash mr-1 text-teal-500"></i> Kebersihan</button>
+                                    <button onclick="selectCat(this, 'Prestasi & Apresiasi Positif')" class="cat-btn col-span-2 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl text-center hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition text-xs font-bold text-emerald-700 dark:text-emerald-400"><i class="fa-solid fa-medal mr-1"></i> Prestasi & Apresiasi Positif</button>
+                                </div>
+                                <input type="hidden" id="catValue">
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Uraian Kejadian / Peristiwa</label>
+                                    <textarea id="catUraian" class="w-full h-24 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary outline-none transition" placeholder="Jelaskan secara rinci apa yang terjadi..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Tindak Lanjut / Penanganan</label>
+                                    <textarea id="catTindak" class="w-full h-16 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary outline-none transition" placeholder="Nasihat, Panggilan Ortu, Surat Peringatan, atau Apresiasi..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <button onclick="saveCatatan()" class="w-full py-4 rounded-xl bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-extrabold hover:shadow-xl transition transform active:scale-95"><i class="fa-solid fa-save mr-2"></i> SIMPAN CATATAN</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="catatan-history" class="space-y-6 hidden">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                            <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4">Filter & Laporan</h2>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="space-y-3">
+                                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                        <button onclick="setCatFilter('kelas')" id="btnCatFilterKelas" class="flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition">Per Kelas</button>
+                                        <button onclick="setCatFilter('siswa')" id="btnCatFilterSiswa" class="flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition">Per Siswa</button>
+                                    </div>
+                                    <input type="hidden" id="catFilterMode" value="kelas">
+                                    <select id="histCatKelas" onchange="loadCatatanStudentsForFilter()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white"><option value="">- Pilih Kelas -</option></select>
+                                    <select id="histCatSiswa" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white hidden"><option value="">- Pilih Siswa -</option></select>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="date" id="catStart" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white">
+                                        <input type="date" id="catEnd" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white">
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="fetchCatatanHistory()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-indigo-700 transition shadow">TAMPILKAN</button>
+                                        <button onclick="printCatatanPDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="catTimeline" class="space-y-4">
+                            <div class="text-center py-10 text-slate-400 text-sm italic">Silakan filter data untuk melihat riwayat.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-rekap" class="page-content hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
+                        <button onclick="showRekapType('absen')" id="sw-absen" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-user-check"></i> Laporan Absen</button>
+                        <button onclick="showRekapType('nilai')" id="sw-nilai" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-star"></i> Laporan Nilai</button>
+                    </div>
+                    <div id="panel-rekap-absen" class="space-y-6 animate-fade-in">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
+                            <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4">Filter Absensi</h2>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="space-y-3">
+                                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg"><button onclick="setRekapMode('kelas')" id="btnModeKelas" class="flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition">Per Kelas</button><button onclick="setRekapMode('siswa')" id="btnModeSiswa" class="flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition">Riwayat Siswa</button></div><input type="hidden" id="rekapMode" value="kelas">
+                                    <select id="rekapKelas" onchange="loadSiswaForFilter()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white"><option value="">- Pilih Kelas -</option></select><select id="rekapSiswa" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white hidden"><option value="">- Pilih Siswa -</option></select>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-2 gap-2"><input type="date" id="rekapStart" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white"><input type="date" id="rekapEnd" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white"></div>
+                                    <div class="flex gap-2"><button onclick="fetchReportData()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNativePDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="panel-rekap-nilai" class="space-y-6 hidden animate-fade-in">
+                        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl border-l-4 border-l-amber-500">
+                            <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4">Filter Penilaian</h2>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="space-y-3">
+                                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                        <button onclick="setNilaiMode('rapor')" id="btnNilaiRapor" class="flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition">Rapor</button>
+                                        <button onclick="setNilaiMode('detail')" id="btnNilaiDetail" class="flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition">Per Kelas</button>
+                                        <button onclick="setNilaiMode('siswa')" id="btnNilaiSiswa" class="flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition">Riwayat Siswa</button>
+                                    </div>
+                                    <input type="hidden" id="nilaiMode" value="rapor">
+                                    <select id="rekapNilaiKelas" onchange="loadSiswaForNilai()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white"><option value="">- Pilih Kelas -</option></select>
+                                    <select id="filterNilaiJenis" onchange="renderReportTable()" class="hidden w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white"><option value="all">Semua (Raw Data)</option><option value="Tugas">Tugas (Matrix View)</option><option value="Praktek">Praktek (Matrix View)</option><option value="UH">Ulangan Harian (Matrix View)</option><option value="UTS">UTS (Matrix View)</option><option value="UAS">UAS (Matrix View)</option></select>
+                                    <select id="filterNilaiSiswa" class="hidden w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white"><option value="">- Pilih Siswa -</option></select>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-[10px] text-amber-700 dark:text-amber-400 font-medium leading-relaxed"><i class="fa-solid fa-info-circle mr-1"></i> Data yang ditampilkan otomatis difilter berdasarkan <b>Mata Pelajaran Anda</b> saat ini.</div>
+                                    <div class="flex gap-2"><button onclick="fetchNilaiReport()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNilaiPDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="rekapPreviewBox" class="hidden bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <h3 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-widest">Hasil Preview</h3>
+                            <div class="flex gap-2 items-center"><span class="text-[10px] text-slate-400 font-bold uppercase">Rows:</span><select id="rowsPerReport" onchange="changeReportRows(this.value)" class="text-[10px] border rounded bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-1"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="all">All</option></select></div>
+                        </div>
+                        <span id="previewMeta" class="text-[10px] font-mono bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-md mb-2 inline-block"></span>
+                        <div id="previewContainer"><table class="w-full text-sm text-left border-collapse"><thead id="previewThead" class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider"></thead><tbody id="previewTbody" class="divide-y divide-slate-50 dark:divide-slate-800 text-slate-700 dark:text-slate-300"></tbody></table></div>
+                        <div class="mt-4 flex justify-between items-center text-xs font-bold text-slate-500 dark:text-slate-400"><button onclick="prevReportPage()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg transition">Prev</button><span id="reportPageInfo">1/1</span><button onclick="nextReportPage()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg transition">Next</button></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="md:hidden fixed bottom-0 w-full h-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center z-40 pb-2 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+            <button onclick="switchPage('dashboard')" id="mob-dashboard" class="flex flex-col items-center gap-1.5 flex-1 text-indigo-600 transition"><i class="fa-solid fa-grid-2 text-xl"></i><span class="text-[10px] font-bold">Home</span></button>
+            <button onclick="switchPage('input')" id="mob-input" class="flex flex-col items-center gap-1.5 flex-1 text-slate-300 transition hover:text-indigo-600"><i class="fa-solid fa-user-check text-xl"></i><span class="text-[10px] font-bold">Absen</span></button>
+            <button onclick="switchPage('nilai')" id="mob-nilai" class="flex flex-col items-center gap-1.5 flex-1 text-slate-300 transition hover:text-indigo-600"><i class="fa-solid fa-star text-xl"></i><span class="text-[10px] font-bold">Nilai</span></button>
+            <button onclick="switchPage('jurnal')" id="mob-jurnal" class="flex flex-col items-center gap-1.5 flex-1 text-slate-300 transition hover:text-indigo-600"><i class="fa-solid fa-book-open text-xl"></i><span class="text-[10px] font-bold">Jurnal</span></button>
+            <button onclick="switchPage('catatan')" id="mob-catatan" class="flex flex-col items-center gap-1.5 flex-1 text-slate-300 transition hover:text-indigo-600"><i class="fa-solid fa-clipboard-user text-xl"></i><span class="text-[10px] font-bold">Catatan</span></button>
+            <button onclick="switchPage('rekap')" id="mob-rekap" class="flex flex-col items-center gap-1.5 flex-1 text-slate-300 transition hover:text-indigo-600"><i class="fa-solid fa-file-invoice text-xl"></i><span class="text-[10px] font-bold">Laporan</span></button>
+        </nav>
+    </div>
+
+    <div id="publicView" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full md:max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up ring-1 ring-slate-200 dark:ring-slate-800">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0 z-10">
+                <h3 class="font-extrabold text-lg text-slate-800 dark:text-white flex items-center gap-2"><i class="fa-solid fa-search text-indigo-500"></i> Cek Absensi</h3>
+                <button onclick="togglePublic(false)" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition text-slate-500 dark:text-slate-400"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 shrink-0 space-y-3 z-10">
+                <div class="flex bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+                    <button onclick="setPublicMode('kelas')" id="pubBtnKelas" class="flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition">REKAP KELAS</button>
+                    <button onclick="setPublicMode('siswa')" id="pubBtnSiswa" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition">RIWAYAT SISWA</button>
+                </div>
+                <input type="hidden" id="pubMode" value="kelas">
+                <div class="grid grid-cols-2 gap-2"><input type="date" id="pubStart" class="border-0 ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 dark:bg-slate-900 dark:text-white"><input type="date" id="pubEnd" class="border-0 ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 dark:bg-slate-900 dark:text-white"></div>
+                <div class="flex gap-2">
+                    <select id="pubKelas" onchange="loadPublicStudents()" class="flex-1 border-0 ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 bg-white dark:bg-slate-900 dark:text-white"><option value="">- Pilih Kelas -</option></select>
+                    <select id="pubSiswa" class="flex-1 border-0 ring-1 ring-slate-200 dark:ring-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-slate-600 bg-white dark:bg-slate-900 dark:text-white hidden"><option value="">- Pilih Siswa -</option></select>
+                </div>
+                <button onclick="fetchPublicData()" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition active:scale-95"><i class="fa-solid fa-magnifying-glass mr-2"></i> TAMPILKAN DATA</button>
+            </div>
+            <div class="flex-1 overflow-y-auto min-h-0 bg-white dark:bg-slate-900 relative" id="pubListWrapper"><div id="pubList" class="p-5 space-y-3"><div class="flex flex-col items-center justify-center h-full text-slate-300 py-10 opacity-50"><i class="fa-solid fa-clipboard-list text-4xl mb-2"></i><span class="text-xs font-bold">Silakan pilih filter data</span></div></div></div>
+            <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950 shrink-0 z-10">
+                <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-slate-400 uppercase hidden md:inline">Tampilkan:</span><select id="pubRows" onchange="changePublicRows(this.value)" class="text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="all">All</option></select></div>
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400"><button onclick="prevPage()" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fa-solid fa-chevron-left"></i></button><span id="pageInfo" class="min-w-[40px] text-center font-mono">1/1</span><button onclick="nextPage()" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fa-solid fa-chevron-right"></i></button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7MxxOfg6MpiTZXkOBCALxKNPRNkQTWYKkfAuHdtrchDYzJC0ZJkrGGZiGykw7BnKD/exec'; 
+        
+        let currentUser=null, currentStudents=[], currentNilaiStudents=[], schoolInfo={}, dashboardData={}, myChart=null, myDoughnut=null;
+        let chartNilaiBar=null, chartNilaiDonat=null; 
+        let globalPublicData=[], processedPublicData=[], currentPage=1, rowsPerPage=10;
+        let globalReportData={data:[], mode:'rapor', type:'absen'}, currentReportPage=1, reportRows=10;
+        let globalJurnalHistory = []; 
+        let currentCatatanStudents = [], globalCatatanHistory = [];
+
+        window.onload = function() {
+            try {
+                const t=new Date().toISOString().split('T')[0];
+                ['inputDate','jurDate','rekapStart','rekapEnd','pubStart','pubEnd','catDate','catStart','catEnd'].forEach(id=>{
+                    const el = document.getElementById(id);
+                    if(el) el.value=t;
+                });
+                if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark');
+                loadClasses(); renderJamButtons();
+            } catch(e) { console.error("Load Error:", e); }
+        };
+
+        function toggleDarkMode(){document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark')?'dark':'light');}
+        function getGreeting(){const h=new Date().getHours(); return h<11?'Selamat Pagi ☀️':h<15?'Selamat Siang 🌤️':h<18?'Selamat Sore 🌇':'Selamat Malam 🌙';}
+        function showAppInfo(){Swal.fire({title:'KLASSA', html:'Kehadiran,Laporan,Akhlak,Sistem Sekolah Terpadu<br>UPT SPF SMP Negeri 16 Makassar<br><br>Features: WA, Matrix Report, Jurnal PDF<br>&copy; Muhammad Hasratul', icon:'info', confirmButtonColor:'#4f46e5'});}
+        function confirmLogout(){Swal.fire({title:'Yakin ingin keluar?',icon:'question',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Ya, Keluar'}).then(r=>{if(r.isConfirmed)location.reload()});}
+
+        const toggleLoader=s=>{const l=document.getElementById('loader'); if(l) l.style.display=s?'flex':'none'};
+        async function apiCall(a,p={}){toggleLoader(1);p.action=a;try{const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(p)});const j=await r.json();toggleLoader(0);return j}catch(e){toggleLoader(0);Swal.fire('Error','Koneksi Gagal','error');return{status:'error'}}}
+
+        async function handleLogin(e){
+            e.preventDefault(); const res=await apiCall('login',{username:document.getElementById('username').value,password:document.getElementById('password').value});
+            if(res.status==='success'){
+                currentUser=res.data;
+                document.getElementById('sidebarName').innerText=currentUser.nama.split(' ')[0]; document.getElementById('sidebarMapel').innerText=currentUser.mapel;
+                document.getElementById('greetingText').innerText = getGreeting(); document.getElementById('dashGreeting').innerText = getGreeting() + ", " + currentUser.nama.split(' ')[0];
+                document.getElementById('mapelTitle').innerText = `Analisis Akademik: ${currentUser.mapel}`;
+                document.getElementById('loginScreen').style.display='none'; document.getElementById('mainApp').classList.remove('hidden');
+                loadDashboardStats(); loadClasses(); loadSchoolInfo();
+                const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true}); Toast.fire({icon: 'success', title: 'Berhasil Masuk'});
+            } else Swal.fire('Gagal','Login Salah','error');
+        }
+
+        async function loadClasses(){
+            const r=await apiCall('getClasses'); 
+            if(r.status==='success'){
+                let o='<option value="">- Pilih -</option>';
+                r.data.forEach(c=>o+=`<option value="${c}">${c}</option>`); 
+                ['inputKelas','rekapKelas','pubKelas','nilaiKelas','rekapNilaiKelas','jurKelas','catKelas','histCatKelas'].forEach(id => {
+                    const el = document.getElementById(id); if(el) el.innerHTML=o;
+                });
+            }
+        }
+        async function loadSchoolInfo(){const r=await apiCall('getSchoolInfo'); if(r.status==='success')schoolInfo=r.data;}
+
+        // --- DASHBOARD LOGIC ---
+        async function loadDashboardStats(){const r=await apiCall('getDashboardStats'); if(r.status==='success'){dashboardData=r; switchDashView('today'); renderTopAlpa(r.topAlpa);}}
+        function switchDashView(v){
+            const d=v==='today'?dashboardData.today:dashboardData.total;
+            const c=v==='today'?dashboardData.chartToday:dashboardData.chartTotal;
+            ['btnViewToday','btnViewTotal'].forEach(b=>document.getElementById(b).className='px-5 py-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 transition');
+            document.getElementById(v==='today'?'btnViewToday':'btnViewTotal').className='px-5 py-2 rounded-lg text-xs font-extrabold bg-indigo-600 text-white shadow-md transition';
+            ['H','S','I','A'].forEach(k=>document.getElementById('stat'+k).innerText=d[k.toLowerCase()]);
+            const ctx=document.getElementById('chartBar').getContext('2d'); if(myChart)myChart.destroy();
+            const l=Object.keys(c).sort(), vD=l.map(k=>c[k]);
+            myChart=new Chart(ctx,{type:'bar',data:{labels:l.length?l:['0'],datasets:[{label:'Hadir',data:vD.length?vD:[0],backgroundColor:'#4f46e5',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{display:false}},x:{grid:{display:false}}}}});
+            const ctxD=document.getElementById('chartDoughnut').getContext('2d'); if(myDoughnut)myDoughnut.destroy();
+            myDoughnut=new Chart(ctxD, {type:'doughnut',data:{labels:['Hadir','Sakit','Izin','Alpa'],datasets:[{data:[d.h,d.s,d.i,d.a],backgroundColor:['#10b981','#f59e0b','#3b82f6','#ef4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+        }
+        function renderTopAlpa(list){
+            const el = document.getElementById('topAlpaList'); el.innerHTML = '';
+            if(!list || list.length === 0) { el.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Tidak ada data Alpa.</td></tr>'; return; }
+            list.forEach(s => { el.innerHTML += `<tr><td class="p-3 font-bold text-slate-700 dark:text-slate-200">${s.nama}</td><td class="p-3 text-slate-500 dark:text-slate-400">${s.kelas}</td><td class="p-3 text-right font-bold text-red-600 dark:text-red-400">${s.count}</td></tr>`; });
+        }
+        function switchDashContent(type) {
+            const btnAbsen = document.getElementById('btnDashAbsen'); const btnNilai = document.getElementById('btnDashNilai');
+            const dashAbsen = document.getElementById('dash-absen'); const dashNilai = document.getElementById('dash-nilai');
+            if(type === 'absen') {
+                btnAbsen.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                btnNilai.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                dashAbsen.classList.remove('hidden'); dashNilai.classList.add('hidden');
+            } else {
+                btnNilai.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                btnAbsen.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                dashNilai.classList.remove('hidden'); dashAbsen.classList.add('hidden');
+                loadDashboardNilai(); 
+            }
+        }
+        async function loadDashboardNilai() {
+            const r = await apiCall('getDashboardNilai', {mapel: currentUser.mapel, guru: currentUser.nama});
+            if(r.status === 'success') {
+                document.getElementById('dnAvg').innerText = r.summary.avg;
+                document.getElementById('dnHigh').innerText = r.summary.high.na; document.getElementById('dnHighName').innerText = `${r.summary.high.nama} (${r.summary.high.kelas})`;
+                document.getElementById('dnLow').innerText = r.summary.low.na; document.getElementById('dnLowName').innerText = `${r.summary.low.nama} (${r.summary.low.kelas})`;
+                const ctxB = document.getElementById('chartNilaiBar').getContext('2d'); if(chartNilaiBar) chartNilaiBar.destroy();
+                chartNilaiBar = new Chart(ctxB, {type:'bar', data:{labels:r.chartKelas.labels, datasets:[{label:'Rata-Rata', data:r.chartKelas.data, backgroundColor:'#f59e0b', borderRadius:6}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}});
+                const ctxD = document.getElementById('chartNilaiDonat').getContext('2d'); if(chartNilaiDonat) chartNilaiDonat.destroy();
+                chartNilaiDonat = new Chart(ctxD, {type:'doughnut', data:{labels:['Sangat Baik (A)', 'Baik (B)', 'Kurang (C)'], datasets:[{data:r.chartDist, backgroundColor:['#10b981','#f59e0b','#ef4444'], borderWidth:0}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:10}}}}}});
+                const top = document.getElementById('top10List'); top.innerHTML='';
+                r.top10.forEach(s => top.innerHTML += `<tr class="border-b border-slate-50 dark:border-slate-800"><td class="py-2 text-slate-600 dark:text-slate-300 truncate max-w-[100px]">${s.nama}</td><td class="py-2 text-center text-slate-400 text-[10px]">${s.kelas}</td><td class="py-2 text-right text-emerald-600">${s.na}</td></tr>`);
+                const bot = document.getElementById('bot10List'); bot.innerHTML='';
+                r.bottom10.forEach(s => bot.innerHTML += `<tr class="border-b border-slate-50 dark:border-slate-800"><td class="py-2 text-slate-600 dark:text-slate-300 truncate max-w-[100px]">${s.nama}</td><td class="py-2 text-center text-slate-400 text-[10px]">${s.kelas}</td><td class="py-2 text-right text-red-600">${s.na}</td></tr>`);
+            } else {
+                document.getElementById('dnAvg').innerText = '-';
+                document.getElementById('dnHigh').innerText = '-';
+                document.getElementById('dnLow').innerText = '-';
+            }
+        }
+
+        // --- INPUT ABSEN ---
+        async function loadInputData(){
+            const k=document.getElementById('inputKelas').value, t=document.getElementById('inputDate').value;
+            if(!k||!t)return;
+            const l=document.getElementById('inputList'); l.innerHTML='Loading...';
+            const r=await apiCall('getStudents',{kelas:k,tanggal:t}); l.innerHTML='';
+            if(r.status==='success'){
+                currentStudents=r.data; document.getElementById('fabSave').classList.remove('hidden');
+                l.innerHTML = currentStudents.map((s,i) => {
+                    const st = s.status_today || 'Hadir'; const waOk = st !== 'Hadir';
+                    return `<div class="student-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition mb-3" data-name="${s.nama.toLowerCase()}">
+                        <div class="flex justify-between items-center mb-4"><div><h3 class="font-bold text-slate-800 dark:text-white text-base">${s.nama}</h3><span class="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md tracking-wider">${s.nisn}</span></div><button id="waBtn-${i}" onclick="sendWA(${i})" class="w-10 h-10 rounded-full flex items-center justify-center transition ${waOk?'bg-green-500 text-white shadow-lg cursor-pointer':'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed'}" ${waOk?'':'disabled'}><i class="fa-brands fa-whatsapp text-lg"></i></button></div>
+                        <div class="grid grid-cols-4 gap-2 mb-4">${['Hadir','Sakit','Izin','Alpa'].map(x=>`<label class="status-radio cursor-pointer group w-full"><input type="radio" name="st_${i}" value="${x}" class="hidden r-${x[0].toLowerCase()}" ${st===x?'checked':''} onchange="updWA(${i}, '${x}')"><div class="py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold text-xs text-center border border-slate-100 dark:border-slate-700 transition group-active:scale-95">${x[0]}</div></label>`).join('')}</div>
+                        <input type="text" id="ket_${i}" value="${s.ket_today}" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border-none rounded-xl px-4 py-3 text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary transition outline-none font-medium" placeholder="Keterangan (Opsional)">
+                    </div>`;
+                }).join('');
+            }
+        }
+        function filterStudents(){const term=document.getElementById('searchStudent').value.toLowerCase(); document.querySelectorAll('.student-card').forEach(c=>{c.style.display=c.dataset.name.includes(term)?'block':'none'})}
+        function updWA(i, v){const b=document.getElementById(`waBtn-${i}`); if(v!=='Hadir'){b.disabled=false;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-green-500 text-white shadow-lg cursor-pointer transform scale-110"}else{b.disabled=true;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed"}}
+        function sendWA(i){
+            const s=currentStudents[i]; const val = document.querySelector(`input[name="st_${i}"]:checked`).value;
+            let p=s.nowa?String(s.nowa).replace(/\D/g,''):''; if(p.startsWith('0'))p='62'+p.substring(1);
+            if(p.length<5) return Swal.fire('Gagal','Nomor whatsapp tidak ada','error');
+            const d = new Date(document.getElementById('inputDate').value).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+            const k = document.getElementById(`ket_${i}`).value || '-';
+            const t = `PESAN OTOMATIS-INFO ABSEN *${schoolInfo.nama}*: Tanggal ${d}, Nama: *${s.nama}*, Status: *${val}*, Ket: ${k}. Terima Kasih`;
+            window.open(`https://api.whatsapp.com/send?phone=${p}&text=${encodeURIComponent(t)}`,'_blank');
+        }
+        async function saveAbsen(){
+            const k=document.getElementById('inputKelas').value, t=document.getElementById('inputDate').value; 
+            let d=[]; currentStudents.forEach((s,i)=>{const r=document.querySelector(`input[name="st_${i}"]:checked`);if(r)d.push({nisn:s.nisn,nama:s.nama,kelas:k,status:r.value,keterangan:document.getElementById(`ket_${i}`).value})}); 
+            const r=await apiCall('saveAbsen',{data:d,guruName:currentUser.nama,tanggal:t}); 
+            if(r.status==='success'){Swal.fire({icon:'success',title:'Data Tersimpan',timer:1500,showConfirmButton:false}); loadDashboardStats(); loadInputData();}
+        }
+
+        // --- INPUT NILAI ---
+        async function loadNilaiStudents() {
+            const k = document.getElementById('nilaiKelas').value;
+            const top = document.getElementById('nilaiTopik').value;
+            if(!k) return Swal.fire('Pilih Kelas', 'Silakan pilih kelas terlebih dahulu', 'warning');
+            if(!top) return Swal.fire('Isi Topik', 'Silakan isi Topik/Keterangan Penilaian.', 'warning');
+            document.getElementById('nilaiListWrapper').classList.remove('hidden');
+            const l = document.getElementById('nilaiList');
+            l.innerHTML = '<div class="text-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-amber-500 mx-auto"></div></div>';
+            const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'});
+            if(r.status === 'success') {
+                currentNilaiStudents = r.data;
+                l.innerHTML = currentNilaiStudents.map((s, i) => `<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition"><div class="flex-1"><h4 class="font-bold text-slate-800 dark:text-white text-sm">${s.nama}</h4><span class="text-[10px] text-slate-400 font-mono">${s.nisn}</span></div><div class="w-24"><input type="number" id="val_${i}" min="0" max="100" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-2 text-center font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none transition" placeholder="0-100"></div></div>`).join('');
+            }
+        }
+        async function saveNilai() {
+            const k = document.getElementById('nilaiKelas').value;
+            const j = document.getElementById('nilaiJenis').value;
+            const top = document.getElementById('nilaiTopik').value;
+            let dataToSend = []; currentNilaiStudents.forEach((s, i) => { const val = document.getElementById(`val_${i}`).value; if(val !== '') dataToSend.push({nisn: s.nisn, nama: s.nama, nilai: val}); });
+            if(dataToSend.length === 0) return Swal.fire('Data Kosong', 'Belum ada nilai yang diinput.', 'info');
+            
+            const r = await apiCall('saveNilai', {data: dataToSend, meta: {kelas: k, mapel: currentUser.mapel, jenis: j, topik: top, guru: currentUser.nama}});
+            
+            if(r.status === 'success') { Swal.fire({icon: 'success', title: 'Nilai Tersimpan', text: r.message, timer: 2000, showConfirmButton: false}); document.getElementById('nilaiTopik').value = ''; document.querySelectorAll('input[type=number]').forEach(el => el.value = ''); } else { Swal.fire('Gagal', r.message, 'error'); }
+        }
+
+        // --- JURNAL MENGAJAR ---
+        function renderJamButtons() {
+            const c = document.getElementById('jamContainer'); if(!c) return;
+            c.innerHTML = '';
+            for(let i=1; i<=12; i++) {
+                c.innerHTML += `<button onclick="toggleJam(this, '${i}')" class="jam-btn w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition" data-val="${i}">${i}</button>`;
+            }
+        }
+        function toggleJam(btn, val) {
+            btn.classList.toggle('selected');
+            updateJamValue();
+        }
+        function updateJamValue() {
+            const sels = document.querySelectorAll('.jam-btn.selected');
+            const vals = Array.from(sels).map(b => b.dataset.val).sort((a,b)=>a-b);
+            document.getElementById('jurJam').value = vals.join(', ');
+        }
+        function switchJurnalTab(t) {
+            const i = document.getElementById('jurnal-input'); const h = document.getElementById('jurnal-history');
+            const bi = document.getElementById('btnJurnalInput'); const bh = document.getElementById('btnJurnalHist');
+            if(t==='input'){
+                i.classList.remove('hidden'); h.classList.add('hidden');
+                bi.className="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                bh.className="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+            } else {
+                h.classList.remove('hidden'); i.classList.add('hidden');
+                bh.className="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                bi.className="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                loadJurnalHistory();
+            }
+        }
+        async function loadAbsenStats() {
+            const k = document.getElementById('jurKelas').value; const t = document.getElementById('jurDate').value;
+            if(!k || !t) return;
+            const r = await apiCall('getAbsenSummary', {kelas: k, tanggal: t});
+            if(r.status === 'success') {
+                document.getElementById('jurStatTotal').innerText = r.total;
+                document.getElementById('jurStatHadir').innerText = r.hadir;
+                document.getElementById('jurStatAbsen').innerText = r.tidakHadir;
+            }
+        }
+        async function saveJurnal() {
+            const p = {
+                date: document.getElementById('jurDate').value,
+                kelas: document.getElementById('jurKelas').value,
+                jam: document.getElementById('jurJam').value,
+                materi: document.getElementById('jurMateri').value,
+                metode: document.getElementById('jurMetode').value,
+                tindak: document.getElementById('jurTindak').value,
+                catatan: document.getElementById('jurCatatan').value,
+                s_total: document.getElementById('jurStatTotal').innerText,
+                s_hadir: document.getElementById('jurStatHadir').innerText,
+                s_absen: document.getElementById('jurStatAbsen').innerText,
+                guru: currentUser.nama, mapel: currentUser.mapel
+            };
+            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Error', 'Lengkapi data jurnal (Kelas, Jam, Materi)', 'warning');
+            const r = await apiCall('saveJurnal', p);
+            if(r.status === 'success') {
+                Swal.fire({icon:'success', title:'Tersimpan', showConfirmButton:false, timer:1500});
+                document.getElementById('jurMateri').value = ''; document.getElementById('jurCatatan').value = '';
+                document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+                document.getElementById('jurJam').value = '';
+            }
+        }
+        async function loadJurnalHistory() {
+            const l = document.getElementById('jurHistoryList');
+            l.innerHTML = '<tr><td colspan="6" class="p-4 text-center italic text-slate-400">Memuat...</td></tr>';
+            const r = await apiCall('getJurnalHistory', {guru: currentUser.nama, mapel: currentUser.mapel});
+            if(r.status === 'success' && r.data.length > 0) {
+                globalJurnalHistory = r.data;
+                l.innerHTML = r.data.map((j, idx) => `<tr class="border-b dark:border-slate-800"><td class="p-3 font-mono">${new Date(j.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold">${j.kelas}</td><td class="p-3"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold">${j.jam}</span></td><td class="p-3 text-slate-600 dark:text-slate-300 truncate max-w-[150px]">${j.materi}</td><td class="p-3 text-center"><span class="text-xs text-slate-400">${j.hadir}/${parseInt(j.hadir)+parseInt(j.absen)}</span></td><td class="p-3 text-center"><button onclick="printSingleJurnal(${idx})" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-indigo-100 text-indigo-600 transition flex items-center justify-center" title="Cetak Jurnal Ini"><i class="fa-solid fa-print"></i></button></td></tr>`).join('');
+            } else {
+                l.innerHTML = '<tr><td colspan="6" class="p-4 text-center italic text-slate-400">Belum ada riwayat jurnal.</td></tr>';
+            }
+        }
+        function copyLastJurnal() {
+            if(globalJurnalHistory.length === 0) { 
+                loadJurnalHistory().then(() => {
+                    if(globalJurnalHistory.length > 0) fillJurnal(globalJurnalHistory[0]);
+                    else Swal.fire('Info', 'Tidak ada riwayat untuk disalin', 'info');
+                });
+            } else {
+                fillJurnal(globalJurnalHistory[0]);
+            }
+        }
+        function fillJurnal(data) {
+            document.getElementById('jurMateri').value = data.materi;
+            document.getElementById('jurMetode').value = data.metode;
+            document.getElementById('jurTindak').value = data.tindak;
+            Swal.fire({icon:'success', title:'Materi Disalin', toast:true, position:'top-end', showConfirmButton:false, timer:1000});
+        }
+        
+        function printSingleJurnal(index) {
+            const data = globalJurnalHistory[index]; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(0); doc.text((schoolInfo.nama || 'SEKOLAH').toUpperCase(), 105, 15, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(schoolInfo.alamat || '-', 105, 20, {align:'center'}); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LEMBAR AKTIVITAS PEMBELAJARAN", 105, 35, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.autoTable({startY: 40, body: [['Hari / Tanggal', `: ${new Date(data.date).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}`], ['Kelas / Jam Ke', `: ${data.kelas} / ${data.jam}`], ['Mata Pelajaran', `: ${currentUser.mapel}`], ['Guru Pengampu', `: ${currentUser.nama}`]], theme: 'plain', styles: {cellPadding: 1, fontSize: 10}});
+            let y = doc.lastAutoTable.finalY + 5; doc.setFillColor(240, 240, 240); doc.rect(15, y, 180, 8, 'F'); doc.setFont("helvetica", "bold"); doc.text("URAIAN KEGIATAN", 18, y+6);
+            doc.autoTable({startY: y+8, body: [['Materi Pokok', data.materi], ['Metode', data.metode], ['Aktivitas / Catatan', data.catatan || '-'], ['Tindak Lanjut', data.tindak || '-']], theme: 'grid', columnStyles: {0: {fontStyle: 'bold', cellWidth: 40}}});
+            y = doc.lastAutoTable.finalY + 10; doc.setFont("helvetica", "bold"); doc.text("RINGKASAN KEHADIRAN", 15, y);
+            const total = parseInt(data.hadir) + parseInt(data.absen);
+            doc.autoTable({startY: y+2, head: [['Total Siswa', 'Hadir', 'Tidak Hadir']], body: [[total, data.hadir, data.absen]], theme: 'striped', tableWidth: 100});
+            y = doc.lastAutoTable.finalY + 20; const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}); doc.setFont("helvetica", "normal"); doc.text(`Makassar, ${now}`, 140, y); doc.text("Guru Mata Pelajaran,", 140, y+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, y+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip || '-'}`, 140, y+35);
+            doc.save(`Jurnal_Harian_${data.date}.pdf`);
+        }
+
+        function generateJurnalPDF() {
+            if(globalJurnalHistory.length === 0) return Swal.fire('Info', 'Data kosong', 'info');
+            const { jsPDF } = window.jspdf; const doc = new jsPDF({orientation: 'landscape'});
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text((schoolInfo.nama || 'SEKOLAH').toUpperCase(), 148, 15, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(schoolInfo.alamat || '-', 148, 20, {align:'center'}); doc.line(15, 25, 280, 25);
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN JURNAL MENGAJAR BULANAN", 148, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Nama Guru : ${currentUser.nama}`, 15, 45); doc.text(`Mata Pelajaran : ${currentUser.mapel}`, 15, 50);
+            const body = globalJurnalHistory.map((j,i) => [i+1, new Date(j.date).toLocaleDateString('id-ID'), j.jam, j.kelas, j.materi, j.metode, j.tindak, `${j.hadir} / ${parseInt(j.hadir)+parseInt(j.absen)}`]);
+            doc.autoTable({startY: 55, head:[['No','Tanggal','Jam','Kelas','Materi Pokok','Metode','Tindak Lanjut','Hadir/Total']], body:body, theme:'grid', styles:{fontSize:9}, headStyles:{fillColor: [67, 56, 202]}});
+            let y = doc.lastAutoTable.finalY + 20; if (y > 170) { doc.addPage(); y = 30; }
+            const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}); doc.text("Mengetahui,", 30, y); doc.text("Kepala Sekolah", 30, y+5); doc.text(`Makassar, ${now}`, 220, y); doc.text("Guru Mata Pelajaran", 220, y+5); doc.setFont("helvetica", "bold"); doc.text(schoolInfo.kepsek || "( ....................... )", 30, y+30); doc.text(currentUser.nama, 220, y+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${schoolInfo.nip_kepsek || '-' }`, 30, y+35); doc.text(`NIP. ${currentUser.nip || '-' }`, 220, y+35);
+            doc.save('Laporan_Jurnal_Bulanan.pdf');
+        }
+
+        // --- FEATURE: CATATAN SISWA ---
+        function selectCat(btn, val) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('catValue').value = val;
+        }
+
+        function switchCatatanTab(t) {
+            const i = document.getElementById('catatan-input'); const h = document.getElementById('catatan-history');
+            const bi = document.getElementById('btnCatInput'); const bh = document.getElementById('btnCatHist');
+            if(t==='input'){
+                i.classList.remove('hidden'); h.classList.add('hidden');
+                bi.className="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                bh.className="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+            } else {
+                h.classList.remove('hidden'); i.classList.add('hidden');
+                bh.className="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                bi.className="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+            }
+        }
+
+        async function loadCatatanStudents() {
+            const k = document.getElementById('catKelas').value;
+            if(!k) return;
+            document.getElementById('catSiswa').innerHTML = '<option>Memuat siswa...</option>';
+            document.getElementById('catSiswa').disabled = true;
+            const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); // Dummy date for list
+            if(r.status === 'success') {
+                currentCatatanStudents = r.data;
+                let o = '<option value="">- Pilih Siswa -</option>';
+                r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`);
+                document.getElementById('catSiswa').innerHTML = o;
+                document.getElementById('catSiswa').disabled = false;
+            }
+        }
+
+        function setCatFilter(mode) {
+            document.getElementById('catFilterMode').value = mode;
+            document.getElementById('btnCatFilterKelas').className = mode==='kelas'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('btnCatFilterSiswa').className = mode==='siswa'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('histCatSiswa').classList.toggle('hidden', mode!=='siswa');
+        }
+
+        async function loadCatatanStudentsForFilter() {
+            const k = document.getElementById('histCatKelas').value;
+            if(!k) return;
+            const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'});
+            if(r.status === 'success') {
+                let o = '<option value="">- Pilih Siswa -</option>';
+                r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`);
+                document.getElementById('histCatSiswa').innerHTML = o;
+            }
+        }
+
+        async function saveCatatan() {
+            const nisn = document.getElementById('catSiswa').value;
+            const cat = document.getElementById('catValue').value;
+            const uraian = document.getElementById('catUraian').value;
+            const tindak = document.getElementById('catTindak').value;
+            
+            if(!nisn) return Swal.fire('Error', 'Pilih siswa terlebih dahulu.', 'warning');
+            if(!cat) return Swal.fire('Error', 'Pilih kategori kejadian.', 'warning');
+            if(!uraian) return Swal.fire('Error', 'Isi uraian kejadian.', 'warning');
+
+            const siswaObj = currentCatatanStudents.find(s => String(s.nisn) === String(nisn));
+            
+            const p = {
+                tanggal: document.getElementById('catDate').value,
+                guru: currentUser.nama, mapel: currentUser.mapel,
+                siswa: { nisn: nisn, nama: siswaObj.nama, kelas: document.getElementById('catKelas').value },
+                kategori: cat, uraian: uraian, tindak: tindak
+            };
+
+            const r = await apiCall('saveCatatan', p);
+            if(r.status === 'success') {
+                Swal.fire({icon: 'success', title: 'Catatan Tersimpan', showConfirmButton: false, timer: 1500});
+                document.getElementById('catUraian').value = '';
+                document.getElementById('catTindak').value = '';
+                document.getElementById('catSiswa').value = '';
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+                document.getElementById('catValue').value = '';
+            } else { Swal.fire('Gagal', r.message, 'error'); }
+        }
+
+        async function fetchCatatanHistory() {
+            const k = document.getElementById('histCatKelas').value;
+            const m = document.getElementById('catFilterMode').value;
+            let fid = k;
+            if(m === 'siswa') {
+                fid = document.getElementById('histCatSiswa').value;
+                if(!fid) return Swal.fire('Pilih Siswa', 'Silakan pilih nama siswa.', 'warning');
+            } else {
+                if(!k) return Swal.fire('Pilih Kelas', 'Silakan pilih kelas.', 'warning');
+            }
+
+            const p = {
+                startDate: document.getElementById('catStart').value,
+                endDate: document.getElementById('catEnd').value,
+                mode: m, filterId: fid
+            };
+
+            const l = document.getElementById('catTimeline');
+            l.innerHTML = '<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-2xl"></i></div>';
+
+            const r = await apiCall('getCatatanHistory', p);
+            if(r.status === 'success' && r.data.length > 0) {
+                globalCatatanHistory = r.data;
+                l.innerHTML = r.data.map(d => {
+                    // Logic warna kartu berdasarkan kategori
+                    let borderClass = 'border-indigo-100 dark:border-indigo-900';
+                    let icon = 'fa-circle-info'; let color = 'text-indigo-500';
+                    if(d.kategori.includes('Prestasi')) { borderClass='border-emerald-200 dark:border-emerald-900 bg-emerald-50/50'; icon='fa-medal'; color='text-emerald-600'; }
+                    else if(d.kategori.includes('Disiplin') || d.kategori.includes('Tata Tertib')) { borderClass='border-red-200 dark:border-red-900 bg-red-50/50'; icon='fa-triangle-exclamation'; color='text-red-600'; }
+                    else if(d.kategori.includes('Kehadiran')) { borderClass='border-amber-200 dark:border-amber-900 bg-amber-50/50'; icon='fa-clock'; color='text-amber-600'; }
+                    
+                    return `<div class="relative pl-6 pb-2 border-l-2 border-slate-200 dark:border-slate-700">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-slate-800 border-2 ${borderClass.split(' ')[0]}"></div>
+                        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border ${borderClass} shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">${new Date(d.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</span>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-sm mt-0.5">${d.nama} (${d.kelas})</h4>
+                                </div>
+                                <div class="${color} bg-white dark:bg-slate-800 p-1.5 rounded-lg shadow-sm text-xs"><i class="fa-solid ${icon}"></i></div>
+                            </div>
+                            <div class="mb-2">
+                                <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${d.kategori}</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mb-2 leading-relaxed">"${d.uraian}"</p>
+                            ${d.tindak ? `<div class="text-[10px] font-semibold text-slate-500 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg"><i class="fa-solid fa-arrow-right mr-1"></i> TL: ${d.tindak}</div>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                l.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm italic">Tidak ada catatan ditemukan pada periode ini.</div>';
+                globalCatatanHistory = [];
+            }
+        }
+
+        function printCatatanPDF() {
+            if(globalCatatanHistory.length === 0) return Swal.fire('Data Kosong', 'Tampilkan data terlebih dahulu.', 'warning');
+            
+            const mode = document.getElementById('catFilterMode').value;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // KOP SURAT
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text((schoolInfo.nama || 'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(schoolInfo.alamat || '-', 105, 20, {align:'center'});
+            doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+
+            if(mode === 'kelas') {
+                // LAPORAN KELAS (TABEL MATRIKS)
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN JURNAL PEMBINAAN SISWA", 105, 35, {align:'center'});
+                doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                doc.text(`Kelas: ${document.getElementById('histCatKelas').value}`, 15, 45);
+                doc.text(`Periode: ${new Date(document.getElementById('catStart').value).toLocaleDateString('id-ID')} s.d ${new Date(document.getElementById('catEnd').value).toLocaleDateString('id-ID')}`, 15, 50);
+
+                const body = globalCatatanHistory.map((d, i) => [
+                    i+1, 
+                    new Date(d.tanggal).toLocaleDateString('id-ID'), 
+                    d.nama, 
+                    d.kategori, 
+                    d.uraian, 
+                    d.tindak
+                ]);
+
+                doc.autoTable({
+                    startY: 55,
+                    head: [['No', 'Tgl', 'Nama Siswa', 'Kategori', 'Uraian Kejadian', 'Tindak Lanjut']],
+                    body: body,
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    columnStyles: {
+                        0: {cellWidth: 8},
+                        1: {cellWidth: 20},
+                        2: {cellWidth: 35},
+                        3: {cellWidth: 30},
+                        4: {cellWidth: 'auto'}, // Uraian auto wrap
+                        5: {cellWidth: 35}
+                    },
+                    headStyles: { fillColor: [67, 56, 202] }
+                });
+
+            } else {
+                // LAPORAN SISWA (DOSSIER STYLE)
+                const siswaName = document.getElementById('histCatSiswa').options[document.getElementById('histCatSiswa').selectedIndex].text;
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LEMBAR CATATAN PERKEMBANGAN KARAKTER", 105, 35, {align:'center'});
+                
+                // Info Siswa Box
+                doc.setDrawColor(0); doc.setFillColor(248, 250, 252); doc.roundedRect(15, 40, 180, 25, 3, 3, 'FD');
+                doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                doc.text(`NAMA SISWA : ${siswaName}`, 20, 50);
+                doc.text(`KELAS : ${globalCatatanHistory[0].kelas}`, 20, 58); // Ambil kelas dari data pertama
+                doc.setFont("helvetica", "normal");
+                doc.text(`Guru Pembimbing : ${currentUser.nama}`, 120, 50);
+                
+                let startY = 75;
+                
+                globalCatatanHistory.forEach((d, i) => {
+                    // Cek ganti halaman
+                    if(startY > 250) { doc.addPage(); startY = 20; }
+                    
+                    // Title Bar (Date & Category)
+                    doc.setFillColor(240, 240, 240);
+                    if(d.kategori.includes('Prestasi')) doc.setFillColor(209, 250, 229); // Green tint
+                    if(d.kategori.includes('Disiplin')) doc.setFillColor(254, 226, 226); // Red tint
+                    
+                    doc.rect(15, startY, 180, 8, 'F');
+                    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+                    doc.text(`${new Date(d.tanggal).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}  |  ${d.kategori}`, 18, startY+5);
+                    
+                    // Content
+                    const textUraian = doc.splitTextToSize(`URAIAN: ${d.uraian}`, 170);
+                    const textTindak = doc.splitTextToSize(`TINDAK LANJUT: ${d.tindak || '-'}`, 170);
+                    
+                    doc.setFont("helvetica", "normal");
+                    doc.text(textUraian, 18, startY+14);
+                    doc.text(textTindak, 18, startY+14 + (textUraian.length * 5));
+                    
+                    // Line separator
+                    const height = 18 + (textUraian.length * 5) + (textTindak.length * 5);
+                    doc.setDrawColor(200); doc.line(15, startY+height, 195, startY+height);
+                    
+                    startY += height + 5;
+                });
+            }
+
+            // Tanda Tangan
+            let fy = doc.internal.pageSize.height - 40;
+            const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+            doc.setFont("helvetica", "normal"); doc.text(`Makassar, ${now}`, 140, fy);
+            doc.text("Guru Pembimbing,", 140, fy+5);
+            doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+25);
+            doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip || '-'}`, 140, fy+30);
+
+            doc.save(`Catatan_Siswa_${Date.now()}.pdf`);
+        }
+
+        // --- REPORT LOGIC (SHARED) ---
+        function showRekapType(t){
+            currentReportType = t;
+            const a = document.getElementById('sw-absen'); const b = document.getElementById('sw-nilai');
+            const pa = document.getElementById('panel-rekap-absen'); const pn = document.getElementById('panel-rekap-nilai');
+            if(t==='absen'){
+                a.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                b.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                pa.classList.remove('hidden'); pn.classList.add('hidden');
+            } else {
+                b.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-amber-500 text-white shadow transition flex items-center justify-center gap-2";
+                a.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                pn.classList.remove('hidden'); pa.classList.add('hidden');
+            }
+            document.getElementById('rekapPreviewBox').classList.add('hidden'); 
+        }
+        function setRekapMode(m){document.getElementById('rekapMode').value=m; document.getElementById('btnModeKelas').className=m==='kelas'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('btnModeSiswa').className=m==='siswa'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('rekapSiswa').classList.toggle('hidden',m!=='siswa');}
+        function setNilaiMode(m){
+            document.getElementById('nilaiMode').value=m; 
+            document.getElementById('btnNilaiRapor').className=m==='rapor'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; 
+            document.getElementById('btnNilaiDetail').className=m==='detail'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('btnNilaiSiswa').className=m==='siswa'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('filterNilaiJenis').classList.toggle('hidden', m !== 'detail');
+            document.getElementById('filterNilaiSiswa').classList.toggle('hidden', m !== 'siswa');
+        }
+        async function loadSiswaForFilter(){const k=document.getElementById('rekapKelas').value;if(!k||document.getElementById('rekapMode').value!=='siswa')return;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('rekapSiswa').innerHTML=o;}}
+        async function loadSiswaForNilai(){const k=document.getElementById('rekapNilaiKelas').value;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih Siswa -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('filterNilaiSiswa').innerHTML=o;}}
+        async function fetchReportData(){
+            const m=document.getElementById('rekapMode').value, k=document.getElementById('rekapKelas').value, s1=document.getElementById('rekapStart').value, s2=document.getElementById('rekapEnd').value;
+            let fid=k; if(!k){Swal.fire('Pilih Kelas','','warning');return;} if(m==='siswa'){fid=document.getElementById('rekapSiswa').value; if(!fid){Swal.fire('Pilih Siswa','','warning');return;}}
+            const r=await apiCall('getTeacherRecap',{mode:m,filterId:fid,startDate:s1,endDate:s2});
+            if(r.status==='success'&&r.data.length){globalReportData = {data:r.data, mode:m, k:k, s1:s1, s2:s2, fid:fid, type: 'absen'}; currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');} else Swal.fire('Data Kosong','','info');
+        }
+        async function fetchNilaiReport() {
+            const k = document.getElementById('rekapNilaiKelas').value; const m = document.getElementById('nilaiMode').value;
+            if(!k) return Swal.fire('Pilih Kelas', '', 'warning');
+            const r = await apiCall('getNilaiRecap', {kelas: k, mapel: currentUser.mapel, guru: currentUser.nama, type: 'detail'});
+            if(r.status === 'success' && r.data.length > 0) {
+                globalReportData = {data: r.data, mode: m, k: k, mapel: currentUser.mapel, type: 'nilai'};
+                currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');
+            } else Swal.fire('Data Nilai Kosong', '', 'info');
+        }
+        function changeReportRows(v){ 
+             reportRows = v==='all'? globalReportData.data.length : parseInt(v); 
+             currentReportPage=1; 
+             renderReportTable(); 
+        }
+        function renderReportTable(){
+            let d = globalReportData;
+            const th=document.getElementById('previewThead'), tb=document.getElementById('previewTbody'); tb.innerHTML='';
+            if(d.type === 'absen') {
+                const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=d.data.slice(start,end);
+                if(d.mode==='kelas'){
+                    document.getElementById('previewMeta').innerText = `ABSENSI KELAS: ${d.k}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Nama</th><th class="p-3 text-center">H</th><th class="p-3 text-center">S</th><th class="p-3 text-center">I</th><th class="p-3 text-center">A</th></tr>`;
+                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center text-green-600 font-bold bg-green-50 dark:bg-green-900/30 rounded-lg">${r.h}</td><td class="p-3 text-center text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 rounded-lg">${r.s}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50 dark:bg-blue-900/30 rounded-lg">${r.i}</td><td class="p-3 text-center text-red-600 font-bold bg-red-50 dark:bg-red-900/30 rounded-lg">${r.a}</td></tr>`);
+                } else {
+                    const sn=document.getElementById('rekapSiswa'); document.getElementById('previewMeta').innerText = `ABSENSI SISWA: ${sn.options[sn.selectedIndex].text}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Tanggal</th><th class="p-3">Status</th><th class="p-3">Ket</th></tr>`;
+                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-mono text-slate-600 dark:text-slate-400">${new Date(r.dateRaw).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-800 dark:text-slate-200">${r.status}</td><td class="p-3 italic text-slate-400">${r.keterangan||'-'}</td></tr>`);
+                }
+                document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(d.data.length/reportRows)}`;
+            } else {
+                if(d.mode === 'rapor') {
+                    let students = processRaporData(d.data);
+                    document.getElementById('previewMeta').innerText = `NILAI (${d.mapel}) - RAPOR`;
+                    th.innerHTML=`<tr><th class="p-3">Nama</th><th class="p-3 text-center">Tugas</th><th class="p-3 text-center">Praktek</th><th class="p-3 text-center">UH</th><th class="p-3 text-center">UTS</th><th class="p-3 text-center">UAS</th><th class="p-3 text-center">NA</th></tr>`;
+                    const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=students.slice(start,end);
+                    pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center">${r.rt}</td><td class="p-3 text-center">${r.rp}</td><td class="p-3 text-center">${r.ruh}</td><td class="p-3 text-center">${r.uts}</td><td class="p-3 text-center">${r.uas}</td><td class="p-3 text-center font-extrabold text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">${r.na}</td></tr>`);
+                    document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(students.length/reportRows)}`;
+                } else if (d.mode === 'detail') {
+                    const filter = document.getElementById('filterNilaiJenis').value; let filteredData = d.data;
+                    if(filter !== 'all') filteredData = d.data.filter(r => r.jenis === filter);
+                    if(filter === 'all') {
+                        document.getElementById('previewMeta').innerText = `LOG NILAI (${d.mapel}) - SEMUA`;
+                        th.innerHTML=`<tr><th class="p-3">Tgl</th><th class="p-3">Nama</th><th class="p-3">Jenis</th><th class="p-3">Topik</th><th class="p-3">Nilai</th></tr>`;
+                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=filteredData.slice(start,end);
+                        pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-xs font-mono text-slate-500">${new Date(r.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-xs uppercase font-bold text-slate-500">${r.jenis}</td><td class="p-3 italic text-slate-500">${r.topik}</td><td class="p-3 font-bold text-slate-800 dark:text-white">${r.nilai}</td></tr>`);
+                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(filteredData.length/reportRows)}`;
+                    } else {
+                        document.getElementById('previewMeta').innerText = `MATRIX NILAI: ${filter.toUpperCase()}`;
+                        const matrix = processMatrixData(filteredData);
+                        let headerHTML = `<tr><th class="p-3">Nama</th>`;
+                        for(let i=1; i<=matrix.maxCols; i++) headerHTML += `<th class="p-3 text-center">${i}</th>`;
+                        headerHTML += `<th class="p-3 text-center">Rata2</th></tr>`;
+                        th.innerHTML = headerHTML;
+                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=matrix.data.slice(start,end);
+                        pd.forEach(r => {
+                            let rowHTML = `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td>`;
+                            for(let i=0; i<matrix.maxCols; i++) { rowHTML += `<td class="p-3 text-center text-slate-600 dark:text-slate-400">${r.scores[i] || '-'}</td>`; }
+                            rowHTML += `<td class="p-3 text-center font-bold text-amber-600">${r.avg}</td></tr>`;
+                            tb.innerHTML += rowHTML;
+                        });
+                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(matrix.data.length/reportRows)}`;
+                    }
+                } else if (d.mode === 'siswa') {
+                    const nisn = document.getElementById('filterNilaiSiswa').value; const sn = document.getElementById('filterNilaiSiswa'); const studentName = sn.options[sn.selectedIndex].text;
+                    document.getElementById('previewMeta').innerText = `PORTOFOLIO: ${studentName}`;
+                    if(!nisn) { tb.innerHTML = '<tr><td class="p-4 text-center">Pilih Siswa dulu</td></tr>'; return; }
+                    const pData = d.data.filter(r => String(r.nisn) === String(nisn)); th.innerHTML = ''; 
+                    let html = `<tr><td class="p-0">`;
+                    const cats = ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'];
+                    cats.forEach(cat => {
+                        const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
+                        if(items.length > 0) {
+                             html += `<div class="mb-4"><h4 class="font-bold text-xs uppercase bg-slate-100 dark:bg-slate-800 p-2 mb-1 text-slate-600 dark:text-slate-300">${cat}</h4><table class="w-full text-xs">`;
+                             items.forEach(x => { html += `<tr class="border-b border-slate-50 dark:border-slate-800"><td class="py-1 px-2 text-slate-500">${x.topik}</td><td class="py-1 px-2 font-bold text-right text-slate-700 dark:text-white">${x.nilai}</td></tr>`; });
+                             const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length);
+                             html += `<tr class="bg-amber-50 dark:bg-amber-900/10"><td class="py-1 px-2 font-bold text-amber-700">RATA-RATA</td><td class="py-1 px-2 font-bold text-right text-amber-700">${avg}</td></tr></table></div>`;
+                        }
+                    });
+                    html += `</td></tr>`; tb.innerHTML = html; document.getElementById('reportPageInfo').innerText = `1/1`;
+                }
+            }
+        }
+        function processRaporData(rawData) {
+            let students = {};
+            rawData.forEach(r => {
+                if(!students[r.nisn]) students[r.nisn] = { nisn: r.nisn, nama: r.nama, tugas:[], praktek:[], uh:[], uts:[], uas:[] };
+                let j = r.jenis.toLowerCase();
+                if(j.includes('tugas')) students[r.nisn].tugas.push(r.nilai);
+                else if(j.includes('praktek')) students[r.nisn].praktek.push(r.nilai);
+                else if(j.includes('uh') || j.includes('harian')) students[r.nisn].uh.push(r.nilai);
+                else if(j.includes('uts')) students[r.nisn].uts.push(r.nilai);
+                else if(j.includes('uas')) students[r.nisn].uas.push(r.nilai);
+            });
+            let final = [];
+            const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+            Object.values(students).forEach(s => {
+                let rT = avg(s.tugas), rP = avg(s.praktek), rUH = avg(s.uh), rUTS = avg(s.uts), rUAS = avg(s.uas);
+                let div=0, tot=0; if(rT>0){tot+=rT;div++;} if(rP>0){tot+=rP;div++;} if(rUH>0){tot+=rUH;div++;} if(rUTS>0){tot+=rUTS;div++;} if(rUAS>0){tot+=rUAS;div++;}
+                final.push({nama:s.nama, rt:rT||'-', rp:rP||'-', ruh:rUH||'-', uts:rUTS||'-', uas:rUAS||'-', na:div>0?Math.round(tot/div):'-'});
+            });
+            return final.sort((a,b)=>a.nama.localeCompare(b.nama));
+        }
+        function processMatrixData(rawData) {
+            let grouped = {}; let maxLen = 0;
+            rawData.forEach(r => {
+                if(!grouped[r.nisn]) grouped[r.nisn] = { nama: r.nama, scores: [] };
+                grouped[r.nisn].scores.push(r.nilai);
+                if(grouped[r.nisn].scores.length > maxLen) maxLen = grouped[r.nisn].scores.length;
+            });
+            let final = Object.values(grouped).map(g => {
+                const avg = g.scores.length ? Math.round(g.scores.reduce((a,b)=>a+b,0)/g.scores.length) : 0;
+                return { nama: g.nama, scores: g.scores, avg: avg };
+            });
+            return { data: final.sort((a,b)=>a.nama.localeCompare(b.nama)), maxCols: maxLen };
+        }
+        function prevReportPage(){if(currentReportPage>1){currentReportPage--;renderReportTable();}}
+        function nextReportPage(){currentReportPage++; renderReportTable();}
+        
+        async function generateNativePDF(){
+             if(!globalReportData || !globalReportData.data || globalReportData.data.length===0) { await fetchReportData(); if(!globalReportData.data) return; }
+            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(67, 56, 202); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(67, 56, 202); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN ABSENSI", 105, 35, {align:'center'});
+            let tH=0, tS=0, tI=0, tA=0; if(d.mode==='kelas') d.data.forEach(r=>{tH+=r.h;tS+=r.s;tI+=r.i;tA+=r.a}); else d.data.forEach(r=>{if(r.status==='Hadir')tH++;if(r.status==='Sakit')tS++;if(r.status==='Izin')tI++;if(r.status==='Alpa')tA++;});
+            doc.setFillColor(248, 250, 252); doc.roundedRect(15, 40, 180, 20, 3, 3, 'F'); doc.setFontSize(10); doc.setTextColor(100); doc.text(`Total Hadir: ${tH}`, 25, 52); doc.text(`Total Sakit: ${tS}`, 65, 52); doc.text(`Total Izin: ${tI}`, 105, 52); doc.setTextColor(220, 38, 38); doc.text(`Total Alpa: ${tA}`, 145, 52); doc.setTextColor(0);
+            doc.text(`Kelas: ${d.k}`, 15, 70); if(d.mode==='siswa') { const sn=document.getElementById('rekapSiswa'); doc.text(`Nama: ${sn.options[sn.selectedIndex].text}`, 15, 75); } doc.text(`Periode: ${new Date(d.s1).toLocaleDateString('id-ID')} s/d ${new Date(d.s2).toLocaleDateString('id-ID')}`, 15, d.mode==='siswa'?80:75);
+            let body = []; if(d.mode==='kelas'){body = d.data.map((r,i)=>[i+1, r.nama, r.h, r.s, r.i, r.a]); doc.autoTable({startY: d.mode==='siswa'?85:80, head:[['No','Nama','H','S','I','A']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index > 1) {if (data.cell.raw > 0) data.cell.styles.fontStyle = 'bold'; if (data.column.index === 5 && data.cell.raw > 0) data.cell.styles.textColor = [220, 38, 38];}}});} else {body = d.data.map((r,i)=>[i+1, new Date(r.dateRaw).toLocaleDateString('id-ID'), r.status, r.keterangan||'-']); doc.autoTable({startY: 85, head:[['No','Tanggal','Status','Ket']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index === 2) {if(data.cell.raw==='Hadir') data.cell.styles.textColor = [22, 163, 74]; if(data.cell.raw==='Sakit') data.cell.styles.textColor = [217, 119, 6]; if(data.cell.raw==='Izin') data.cell.styles.textColor = [37, 99, 235]; if(data.cell.raw==='Alpa') { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; }}}});}
+            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
+            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${currentUser.mapel || 'Mata Pelajaran'},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+            doc.save(`Laporan_Absen_${Date.now()}.pdf`);
+        }
+
+        async function generateNilaiPDF(){
+            if(!globalReportData || globalReportData.type !== 'nilai') { await fetchNilaiReport(); if(!globalReportData.data) return; }
+            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(245, 158, 11); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            let title = ""; let head=[], body=[]; let pdfData = d.data;
+            if(d.mode === 'rapor') {
+                title = `LEGER NILAI: ${d.mapel}`; let students = processRaporData(d.data);
+                head=[['No','Nama','Tugas','Praktek','UH','UTS','UAS','NA']]; body = students.map((r,i)=>[i+1, r.nama, r.rt, r.rp, r.ruh, r.uts, r.uas, r.na]);
+            } else if (d.mode === 'detail') {
+                 const filter = document.getElementById('filterNilaiJenis').value;
+                 if(filter === 'all') { title = `LOG NILAI (ALL): ${d.mapel}`; head=[['No','Tanggal','Nama','Jenis','Topik','Nilai']]; body = d.data.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.nama, r.jenis, r.topik, r.nilai]);
+                 } else { title = `DAFTAR NILAI: ${filter.toUpperCase()}`; pdfData = d.data.filter(r => r.jenis === filter); let matrix = processMatrixData(pdfData); let hRow = ['No', 'Nama']; for(let i=1; i<=matrix.maxCols; i++) hRow.push(`${i}`); hRow.push('Rata'); head=[hRow]; body = matrix.data.map((r,i) => { let row = [i+1, r.nama]; for(let j=0; j<matrix.maxCols; j++) row.push(r.scores[j]||'-'); row.push(r.avg); return row; }); }
+            } else if (d.mode === 'siswa') {
+                const sn = document.getElementById('filterNilaiSiswa'); title = `PORTOFOLIO: ${sn.options[sn.selectedIndex].text}`; const nisn = document.getElementById('filterNilaiSiswa').value; const pData = d.data.filter(r => String(r.nisn) === String(nisn));
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+                let startY = 55; ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'].forEach(cat => {
+                    const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
+                    if(items.length > 0) {
+                        doc.setFont("helvetica", "bold"); doc.setTextColor(100); doc.text(cat, 15, startY);
+                        const subBody = items.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.topik, r.nilai]);
+                        const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length); subBody.push(['','','RATA-RATA', avg]);
+                        doc.autoTable({startY: startY+2, head:[['No','Tanggal','Topik','Nilai']], body:subBody, theme:'grid', didParseCell: function(data) { if(data.row.index === subBody.length-1) data.cell.styles.fontStyle='bold'; } }); startY = doc.lastAutoTable.finalY + 10;
+                    }
+                });
+                let fy = startY + 10; if(fy>250){doc.addPage();fy=20;}
+                const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+                doc.save(`Portofolio_${title}_${Date.now()}.pdf`); return; 
+            }
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+            doc.autoTable({startY: 55, head:head, body:body, theme:'striped',headStyles:{fillColor:[245, 158, 11]}});
+            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
+            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+            doc.save(`Laporan_${title}_${Date.now()}.pdf`);
+        }
+
+        function setPublicMode(m){document.getElementById('pubMode').value=m; document.getElementById('pubBtnKelas').className = m==='kelas' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubBtnSiswa').className = m==='siswa' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubSiswa').classList.toggle('hidden', m!=='siswa'); document.getElementById('pubList').innerHTML = ''; document.getElementById('pageInfo').innerText = '1/1';}
+        function togglePublic(s){document.getElementById('publicView').style.display = s ? 'flex' : 'none'; if(s) loadPublicClasses();}
+        async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
+        async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
+        function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
+        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = '<div class="flex flex-col items-center justify-center py-10"><div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div><p class="mt-2 text-xs font-bold text-slate-400">Sedang mencari data...</p></div>'; const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
+        function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
+        function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
+        function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
+
+        function switchPage(p){
+            document.querySelectorAll('.page-content').forEach(e=>e.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden');
+            ['nav-dashboard','nav-input','nav-nilai','nav-rekap','nav-jurnal','nav-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('active-nav');e.classList.remove('bg-indigo-50');e.classList.remove('dark:bg-slate-800');e.classList.add('text-slate-500');e.classList.add('dark:text-slate-400')});
+            document.getElementById('nav-'+p).classList.add('active-nav'); document.getElementById('nav-'+p).classList.add('bg-indigo-50'); document.getElementById('nav-'+p).classList.add('dark:bg-slate-800');
+            ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
+            document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
+        }
+    </script>
+</body>
+</html>
