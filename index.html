@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>K L A S S A</title>
+    <title>KLASSA-16</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -102,7 +102,7 @@
         <aside id="sidebar" class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col h-full z-20 shadow-2xl">
             <div class="h-24 flex items-center px-8 border-b border-slate-50 dark:border-slate-800 gap-3">
                 <img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-10 h-10 object-contain">
-                <span class="font-extrabold text-2xl text-slate-800 dark:text-white tracking-tight">KLASSA.</span>
+                <span class="font-extrabold text-2xl text-slate-800 dark:text-white tracking-tight">K L A S S A</span>
             </div>
             <div class="p-6">
                 <div class="bg-slate-900 dark:bg-slate-800 p-5 rounded-2xl text-white shadow-xl relative overflow-hidden group">
@@ -128,7 +128,7 @@
 
         <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors">
             <header class="md:hidden h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b dark:border-slate-800 flex items-center px-5 justify-between sticky top-0 z-30">
-                <div class="flex items-center gap-3"><img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-8 h-8 object-contain"><span class="font-bold text-lg text-slate-800 dark:text-white">SiAbsen</span></div>
+                <div class="flex items-center gap-3"><img src="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" class="w-8 h-8 object-contain"><span class="font-bold text-lg text-slate-800 dark:text-white">K L A S S A</span></div>
                 <div class="flex gap-2"><button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:inline"></i></button><button onclick="confirmLogout()" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center"><i class="fa-solid fa-power-off"></i></button></div>
             </header>
 
@@ -577,7 +577,7 @@
         function sendWA(i){
             const s=currentStudents[i]; const val = document.querySelector(`input[name="st_${i}"]:checked`).value;
             let p=s.nowa?String(s.nowa).replace(/\D/g,''):''; if(p.startsWith('0'))p='62'+p.substring(1);
-            if(p.length<5) return Swal.fire('Gagal','Nomor whatsapp tidak ada','error');
+            if(p.length<5) return Swal.fire('Gagal','Nomor whatsapp kosong/belum diisi','error');
             const d = new Date(document.getElementById('inputDate').value).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
             const k = document.getElementById(`ket_${i}`).value || '-';
             const t = `PESAN OTOMATIS-INFO ABSEN *${schoolInfo.nama}*: Tanggal ${d}, Nama: *${s.nama}*, Status: *${val}*, Ket: ${k}. Terima Kasih`;
@@ -1195,4 +1195,5 @@
         }
     </script>
 </body>
+
 </html>
