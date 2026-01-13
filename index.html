@@ -456,6 +456,43 @@
             </div>
         </div>
     </div>
+	<div id="modalProfile" class="fixed inset-0 z-[70] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-white/20 relative">
+
+        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 text-center relative">
+            <button onclick="closeProfile()" class="absolute top-4 right-4 text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="w-24 h-24 bg-white rounded-full mx-auto p-1 shadow-xl mb-3">
+                <img id="profImg" src="" class="w-full h-full rounded-full bg-slate-100 object-cover">
+            </div>
+            <h2 id="profName" class="text-white font-black text-xl tracking-tight leading-tight">Nama Siswa</h2>
+            <p id="profKelas" class="text-indigo-200 text-xs font-bold uppercase tracking-widest mt-1">Kelas - NISN</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl"><div class="text-xs text-emerald-600 font-bold">Hadir</div><div id="p-h" class="text-lg font-black text-slate-700 dark:text-white">0</div></div>
+                <div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl"><div class="text-xs text-amber-600 font-bold">Sakit</div><div id="p-s" class="text-lg font-black text-slate-700 dark:text-white">0</div></div>
+                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl"><div class="text-xs text-blue-600 font-bold">Izin</div><div id="p-i" class="text-lg font-black text-slate-700 dark:text-white">0</div></div>
+                <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl"><div class="text-xs text-red-600 font-bold">Alpa</div><div id="p-a" class="text-lg font-black text-slate-700 dark:text-white">0</div></div>
+            </div>
+
+            <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-xl"><i class="fa-solid fa-star"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 font-bold uppercase">Rata-Rata Nilai</p>
+                    <p id="p-avg" class="text-2xl font-black text-slate-800 dark:text-white">-</p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-history"></i> Catatan Terakhir</h4>
+                <div id="profNotes" class="space-y-2 text-xs">
+                    <div class="text-center italic text-slate-400">Belum ada catatan.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7MxxOfg6MpiTZXkOBCALxKNPRNkQTWYKkfAuHdtrchDYzJC0ZJkrGGZiGykw7BnKD/exec'; 
@@ -577,7 +614,7 @@
                 l.innerHTML = currentStudents.map((s,i) => {
                     const st = s.status_today || 'Hadir'; const waOk = st !== 'Hadir';
                     return `<div class="student-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition mb-3" data-name="${s.nama.toLowerCase()}">
-                        <div class="flex justify-between items-center mb-4"><div><h3 class="font-bold text-slate-800 dark:text-white text-base">${s.nama}</h3><span class="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md tracking-wider">${s.nisn}</span></div><button id="waBtn-${i}" onclick="sendWA(${i})" class="w-10 h-10 rounded-full flex items-center justify-center transition ${waOk?'bg-green-500 text-white shadow-lg cursor-pointer':'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed'}" ${waOk?'':'disabled'}><i class="fa-brands fa-whatsapp text-lg"></i></button></div>
+                        <div class="flex justify-between items-center mb-4"><div><h3 onclick="viewProfile('${s.nisn}')" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 text-lg cursor-pointer transition-transform duration-300 hover:scale-105 inline-block"><i class="fa-solid fa-id-card-clip mr-2 text-indigo-500"></i>${s.nama}</h3><span class="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md tracking-wider">${s.nisn}</span></div><button id="waBtn-${i}" onclick="sendWA(${i})" class="w-10 h-10 rounded-full flex items-center justify-center transition ${waOk?'bg-green-500 text-white shadow-lg cursor-pointer':'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed'}" ${waOk?'':'disabled'}><i class="fa-brands fa-whatsapp text-lg"></i></button></div>
                         <div class="grid grid-cols-4 gap-2 mb-4">${['Hadir','Sakit','Izin','Alpa'].map(x=>`<label class="status-radio cursor-pointer group w-full"><input type="radio" name="st_${i}" value="${x}" class="hidden r-${x[0].toLowerCase()}" ${st===x?'checked':''} onchange="updWA(${i}, '${x}')"><div class="py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold text-xs text-center border border-slate-100 dark:border-slate-700 transition group-active:scale-95">${x[0]}</div></label>`).join('')}</div>
                         <input type="text" id="ket_${i}" value="${s.ket_today}" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border-none rounded-xl px-4 py-3 text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary transition outline-none font-medium" placeholder="Keterangan (Opsional)">
                     </div>`;
@@ -1283,8 +1320,55 @@
             } else {
                 Swal.fire('Gagal', r.message, 'error');
             }
-        }
+		 }
+		// --- FITUR PROFIL 360 (V39) ---
+		async function viewProfile(nisn) {
+			// Tampilkan loading dulu
+			const modal = document.getElementById('modalProfile');
+			modal.classList.remove('hidden');
+			document.getElementById('profName').innerText = "Memuat Data...";
+			document.getElementById('profKelas').innerText = "Mohon Tunggu...";
+			document.getElementById('profImg').src = "https://api.dicebear.com/9.x/micah/svg?seed=loading"; // Placeholder
+
+			// Panggil Backend
+			const r = await apiCall('getStudentProfile', { nisn: nisn });
+
+			if(r.status === 'success') {
+				const i = r.info;
+				// Set Data Dasar
+				document.getElementById('profName').innerText = i.nama;
+				document.getElementById('profKelas').innerText = `${i.kelas} • ${i.nisn}`;
+				// Generate Kartun Lucu dari Nama
+				document.getElementById('profImg').src = `https://api.dicebear.com/9.x/micah/svg?seed=${i.nama}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
+				// Set Statistik
+				document.getElementById('p-h').innerText = r.abs.h;
+				document.getElementById('p-s').innerText = r.abs.s;
+				document.getElementById('p-i').innerText = r.abs.i;
+				document.getElementById('p-a').innerText = r.abs.a;
+				document.getElementById('p-avg').innerText = r.avg || '-';
+
+				// Set Catatan
+				const nDiv = document.getElementById('profNotes');
+				if(r.notes.length > 0) {
+					nDiv.innerHTML = r.notes.map(n => 
+						`<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border-l-4 ${n.ket.includes('Prestasi')?'border-emerald-500':'border-red-500'}">
+							<div class="flex justify-between font-bold text-slate-700 dark:text-slate-300"><span>${n.ket}</span><span class="text-[10px] opacity-50">${n.tgl}</span></div>
+							<p class="mt-1 text-slate-500 truncate">${n.uraian}</p>
+					</div>`
+				).join('');
+			} else {
+				nDiv.innerHTML = '<div class="text-center italic text-slate-400 py-2">Bersih, tidak ada catatan.</div>';
+			}
+		} else {
+			closeProfile();
+			Swal.fire('Gagal', 'Data siswa tidak ditemukan', 'error');
+		}
+	}
+
+	function closeProfile() {
+		document.getElementById('modalProfile').classList.add('hidden');
+	}
     </script>
 </body>
 </html>
-				
