@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -652,7 +653,7 @@
             const k=document.getElementById('inputKelas').value, t=document.getElementById('inputDate').value; 
             let d=[]; currentStudents.forEach((s,i)=>{const r=document.querySelector(`input[name="st_${i}"]:checked`);if(r)d.push({nisn:s.nisn,nama:s.nama,kelas:k,status:r.value,keterangan:document.getElementById(`ket_${i}`).value})}); 
             const r=await apiCall('saveAbsen',{data:d,guruName:currentUser.nama,tanggal:t}); 
-            if(r.status==='success'){Swal.fire({icon:'success',title:'Data Tersimpan',timer:1500,showConfirmButton:false}); loadDashboardStats(); loadInputData();}
+            if(r.status==='success'){Swal.fire({icon:'success',title:'Data Tersimpan',timer:1500,showConfirmButton:false}); rayakanSukses(); loadDashboardStats(); loadInputData();}
         }
 
         // --- INPUT NILAI ---
@@ -679,7 +680,7 @@
             
             const r = await apiCall('saveNilai', {data: dataToSend, meta: {kelas: k, mapel: currentUser.mapel, jenis: j, topik: top, guru: currentUser.nama}});
             
-            if(r.status === 'success') { Swal.fire({icon: 'success', title: 'Nilai Tersimpan', text: r.message, timer: 2000, showConfirmButton: false}); document.getElementById('nilaiTopik').value = ''; document.querySelectorAll('input[type=number]').forEach(el => el.value = ''); } else { Swal.fire('Gagal', r.message, 'error'); }
+            if(r.status === 'success') { Swal.fire({icon: 'success', title: 'Nilai Tersimpan', text: r.message, timer: 2000, showConfirmButton: false}); rayakanSukses(); document.getElementById('nilaiTopik').value = ''; document.querySelectorAll('input[type=number]').forEach(el => el.value = ''); } else { Swal.fire('Gagal', r.message, 'error'); }
         }
 
         // --- JURNAL MENGAJAR ---
@@ -755,7 +756,7 @@
             document.getElementById('jurMateri').value = data.materi;
             document.getElementById('jurMetode').value = data.metode;
             document.getElementById('jurTindak').value = data.tindak;
-            Swal.fire({icon:'success', title:'Materi Disalin', toast:true, position:'top-end', showConfirmButton:false, timer:1000});
+            Swal.fire({icon:'success', title:'Materi Disalin', toast:true, position:'top-end', showConfirmButton:false, timer:1000}); rayakanSukses();
         }
         
         function printSingleJurnal(index) {
@@ -860,7 +861,7 @@
 
             const r = await apiCall('saveCatatan', p);
             if(r.status === 'success') {
-                Swal.fire({icon: 'success', title: 'Catatan Tersimpan', showConfirmButton: false, timer: 1500});
+                Swal.fire({icon: 'success', title: 'Catatan Tersimpan', showConfirmButton: false, timer: 1500}); rayakanSukses();
                 document.getElementById('catUraian').value = '';
                 document.getElementById('catTindak').value = '';
                 document.getElementById('catSiswa').value = '';
@@ -1462,6 +1463,23 @@
 
 		function closeAnno() {
 			document.getElementById('annoBox').classList.add('hidden');
+	}
+		// Fungsi Pesta
+		function rayakanSukses() {
+			var count = 200;
+			var defaults = { origin: { y: 0.7 } };
+
+			function fire(particleRatio, opts) {
+				confetti(Object.assign({}, defaults, opts, {
+					particleCount: Math.floor(count * particleRatio)
+				}));
+			}
+
+			fire(0.25, { spread: 26, startVelocity: 55, });
+			fire(0.2, { spread: 60, });
+			fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+			fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+			fire(0.1, { spread: 120, startVelocity: 45, });
 	}
     </script>
 </body>
