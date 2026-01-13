@@ -54,7 +54,6 @@
         .r-a:checked + div { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
         .jam-btn.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        /* Style baru untuk Kategori Catatan */
         .cat-btn.selected { transform: scale(1.02); ring-width: 2px; --tw-ring-color: #4f46e5; font-weight: 800; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
         .dark .cat-btn.selected { background-color: #312e81; color: #a5b4fc; border-color: #6366f1; }
 
@@ -70,7 +69,7 @@
 
     <div id="loader" class="fixed inset-0 z-[100] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm hidden flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-14 w-14 border-[5px] border-primary border-t-transparent"></div>
-        <p class="mt-4 text-xs font-bold text-primary tracking-[0.3em] animate-pulse">MEMPROSES...</p>
+        <p class="mt-4 text-xs font-bold text-primary tracking-[0.3em] animate-pulse">Tunggu Yah...</p>
     </div>
 
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-login-pattern p-6 relative overflow-hidden">
@@ -89,7 +88,13 @@
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-5">
                 <div class="relative group"><i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition"></i><input type="text" id="username" class="w-full pl-11 pr-4 py-4 rounded-2xl border-0 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition font-semibold" placeholder="Username" required></div>
-                <div class="relative group"><i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition"></i><input type="password" id="password" class="w-full pl-11 pr-4 py-4 rounded-2xl border-0 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition font-semibold" placeholder="Password" required></div>
+                
+                <div class="relative group">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition"></i>
+                    <input type="password" id="password" class="w-full pl-11 pr-12 py-4 rounded-2xl border-0 bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition font-semibold" placeholder="Password" required>
+                    <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition focus:outline-none"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
+                </div>
+                
                 <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition duration-300">Masuk Guru</button>
             </form>
             <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -222,6 +227,13 @@
                     <div id="jurnal-input" class="space-y-6">
                         <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl">
                             <h2 class="font-extrabold text-lg text-slate-800 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Formulir Jurnal</h2>
+                            
+                            <input type="hidden" id="editJurnalId" value="">
+                            <div id="editModeBadge" class="hidden bg-amber-100 text-amber-800 px-4 py-2 rounded-lg text-sm font-bold mb-4 border border-amber-300 flex justify-between items-center">
+                                <span><i class="fa-solid fa-pen-to-square mr-2"></i> MODE EDIT DATA</span>
+                                <button onclick="cancelEditJurnal()" class="text-xs underline hover:text-red-600">Batal</button>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <input type="date" id="jurDate" onchange="loadAbsenStats()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
                                 <select id="jurKelas" onchange="loadAbsenStats()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
@@ -658,36 +670,20 @@
                 document.getElementById('jurStatAbsen').innerText = r.tidakHadir;
             }
         }
-        async function saveJurnal() {
-            const p = {
-                date: document.getElementById('jurDate').value,
-                kelas: document.getElementById('jurKelas').value,
-                jam: document.getElementById('jurJam').value,
-                materi: document.getElementById('jurMateri').value,
-                metode: document.getElementById('jurMetode').value,
-                tindak: document.getElementById('jurTindak').value,
-                catatan: document.getElementById('jurCatatan').value,
-                s_total: document.getElementById('jurStatTotal').innerText,
-                s_hadir: document.getElementById('jurStatHadir').innerText,
-                s_absen: document.getElementById('jurStatAbsen').innerText,
-                guru: currentUser.nama, mapel: currentUser.mapel
-            };
-            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Error', 'Lengkapi data jurnal (Kelas, Jam, Materi)', 'warning');
-            const r = await apiCall('saveJurnal', p);
-            if(r.status === 'success') {
-                Swal.fire({icon:'success', title:'Tersimpan', showConfirmButton:false, timer:1500});
-                document.getElementById('jurMateri').value = ''; document.getElementById('jurCatatan').value = '';
-                document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
-                document.getElementById('jurJam').value = '';
-            }
-        }
+        
         async function loadJurnalHistory() {
             const l = document.getElementById('jurHistoryList');
             l.innerHTML = '<tr><td colspan="6" class="p-4 text-center italic text-slate-400">Memuat...</td></tr>';
             const r = await apiCall('getJurnalHistory', {guru: currentUser.nama, mapel: currentUser.mapel});
             if(r.status === 'success' && r.data.length > 0) {
                 globalJurnalHistory = r.data;
-                l.innerHTML = r.data.map((j, idx) => `<tr class="border-b dark:border-slate-800"><td class="p-3 font-mono">${new Date(j.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold">${j.kelas}</td><td class="p-3"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold">${j.jam}</span></td><td class="p-3 text-slate-600 dark:text-slate-300 truncate max-w-[150px]">${j.materi}</td><td class="p-3 text-center"><span class="text-xs text-slate-400">${j.hadir}/${parseInt(j.hadir)+parseInt(j.absen)}</span></td><td class="p-3 text-center"><button onclick="printSingleJurnal(${idx})" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-indigo-100 text-indigo-600 transition flex items-center justify-center" title="Cetak Jurnal Ini"><i class="fa-solid fa-print"></i></button></td></tr>`).join('');
+                // [UPDATED] Add Edit & Delete buttons
+                l.innerHTML = r.data.map((j, idx) => `<tr class="border-b dark:border-slate-800"><td class="p-3 font-mono">${new Date(j.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold">${j.kelas}</td><td class="p-3"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold">${j.jam}</span></td><td class="p-3 text-slate-600 dark:text-slate-300 truncate max-w-[150px]">${j.materi}</td><td class="p-3 text-center"><span class="text-xs text-slate-400">${j.hadir}/${parseInt(j.hadir)+parseInt(j.absen)}</span></td>
+                <td class="p-3 text-center flex gap-1 justify-center">
+                    <button onclick="printSingleJurnal(${idx})" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-indigo-100 text-indigo-600 transition flex items-center justify-center"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="setupEditJurnal('${idx}')" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-amber-100 text-amber-500 transition flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="hapusData('${j.id || ''}', 'DataJurnal', loadJurnalHistory)" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-red-100 text-red-500 transition flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
+                </td></tr>`).join('');
             } else {
                 l.innerHTML = '<tr><td colspan="6" class="p-4 text-center italic text-slate-400">Belum ada riwayat jurnal.</td></tr>';
             }
@@ -844,7 +840,6 @@
             if(r.status === 'success' && r.data.length > 0) {
                 globalCatatanHistory = r.data;
                 l.innerHTML = r.data.map(d => {
-                    // Logic warna kartu berdasarkan kategori
                     let borderClass = 'border-indigo-100 dark:border-indigo-900';
                     let icon = 'fa-circle-info'; let color = 'text-indigo-500';
                     if(d.kategori.includes('Prestasi')) { borderClass='border-emerald-200 dark:border-emerald-900 bg-emerald-50/50'; icon='fa-medal'; color='text-emerald-600'; }
@@ -877,101 +872,35 @@
 
         function printCatatanPDF() {
             if(globalCatatanHistory.length === 0) return Swal.fire('Data Kosong', 'Tampilkan data terlebih dahulu.', 'warning');
-            
             const mode = document.getElementById('catFilterMode').value;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
-            // KOP SURAT
             doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text((schoolInfo.nama || 'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
             doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(schoolInfo.alamat || '-', 105, 20, {align:'center'});
             doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
-
             if(mode === 'kelas') {
-                // LAPORAN KELAS (TABEL MATRIKS)
                 doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN JURNAL PEMBINAAN SISWA", 105, 35, {align:'center'});
                 doc.setFontSize(10); doc.setFont("helvetica", "normal");
                 doc.text(`Kelas: ${document.getElementById('histCatKelas').value}`, 15, 45);
                 doc.text(`Periode: ${new Date(document.getElementById('catStart').value).toLocaleDateString('id-ID')} s.d ${new Date(document.getElementById('catEnd').value).toLocaleDateString('id-ID')}`, 15, 50);
-
-                const body = globalCatatanHistory.map((d, i) => [
-                    i+1, 
-                    new Date(d.tanggal).toLocaleDateString('id-ID'), 
-                    d.nama, 
-                    d.kategori, 
-                    d.uraian, 
-                    d.tindak
-                ]);
-
-                doc.autoTable({
-                    startY: 55,
-                    head: [['No', 'Tgl', 'Nama Siswa', 'Kategori', 'Uraian Kejadian', 'Tindak Lanjut']],
-                    body: body,
-                    theme: 'grid',
-                    styles: { fontSize: 8, cellPadding: 2 },
-                    columnStyles: {
-                        0: {cellWidth: 8},
-                        1: {cellWidth: 20},
-                        2: {cellWidth: 35},
-                        3: {cellWidth: 30},
-                        4: {cellWidth: 'auto'}, // Uraian auto wrap
-                        5: {cellWidth: 35}
-                    },
-                    headStyles: { fillColor: [67, 56, 202] }
-                });
-
+                const body = globalCatatanHistory.map((d, i) => [i+1, new Date(d.tanggal).toLocaleDateString('id-ID'), d.nama, d.kategori, d.uraian, d.tindak]);
+                doc.autoTable({startY: 55, head: [['No', 'Tgl', 'Nama Siswa', 'Kategori', 'Uraian Kejadian', 'Tindak Lanjut']], body: body, theme: 'grid', styles: { fontSize: 8, cellPadding: 2 }, columnStyles: {0: {cellWidth: 8}, 1: {cellWidth: 20}, 2: {cellWidth: 35}, 3: {cellWidth: 30}, 4: {cellWidth: 'auto'}, 5: {cellWidth: 35}}, headStyles: { fillColor: [67, 56, 202] } });
             } else {
-                // LAPORAN SISWA (DOSSIER STYLE)
                 const siswaName = document.getElementById('histCatSiswa').options[document.getElementById('histCatSiswa').selectedIndex].text;
                 doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LEMBAR CATATAN PERKEMBANGAN KARAKTER", 105, 35, {align:'center'});
-                
-                // Info Siswa Box
                 doc.setDrawColor(0); doc.setFillColor(248, 250, 252); doc.roundedRect(15, 40, 180, 25, 3, 3, 'FD');
-                doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                doc.text(`NAMA SISWA : ${siswaName}`, 20, 50);
-                doc.text(`KELAS : ${globalCatatanHistory[0].kelas}`, 20, 58); // Ambil kelas dari data pertama
-                doc.setFont("helvetica", "normal");
-                doc.text(`Guru Pembimbing : ${currentUser.nama}`, 120, 50);
-                
+                doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text(`NAMA SISWA : ${siswaName}`, 20, 50); doc.text(`KELAS : ${globalCatatanHistory[0].kelas}`, 20, 58); doc.setFont("helvetica", "normal"); doc.text(`Guru Pembimbing : ${currentUser.nama}`, 120, 50);
                 let startY = 75;
-                
                 globalCatatanHistory.forEach((d, i) => {
-                    // Cek ganti halaman
                     if(startY > 250) { doc.addPage(); startY = 20; }
-                    
-                    // Title Bar (Date & Category)
-                    doc.setFillColor(240, 240, 240);
-                    if(d.kategori.includes('Prestasi')) doc.setFillColor(209, 250, 229); // Green tint
-                    if(d.kategori.includes('Disiplin')) doc.setFillColor(254, 226, 226); // Red tint
-                    
-                    doc.rect(15, startY, 180, 8, 'F');
-                    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-                    doc.text(`${new Date(d.tanggal).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}  |  ${d.kategori}`, 18, startY+5);
-                    
-                    // Content
-                    const textUraian = doc.splitTextToSize(`URAIAN: ${d.uraian}`, 170);
-                    const textTindak = doc.splitTextToSize(`TINDAK LANJUT: ${d.tindak || '-'}`, 170);
-                    
-                    doc.setFont("helvetica", "normal");
-                    doc.text(textUraian, 18, startY+14);
-                    doc.text(textTindak, 18, startY+14 + (textUraian.length * 5));
-                    
-                    // Line separator
-                    const height = 18 + (textUraian.length * 5) + (textTindak.length * 5);
-                    doc.setDrawColor(200); doc.line(15, startY+height, 195, startY+height);
-                    
-                    startY += height + 5;
+                    doc.setFillColor(240, 240, 240); if(d.kategori.includes('Prestasi')) doc.setFillColor(209, 250, 229); if(d.kategori.includes('Disiplin')) doc.setFillColor(254, 226, 226);
+                    doc.rect(15, startY, 180, 8, 'F'); doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text(`${new Date(d.tanggal).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}  |  ${d.kategori}`, 18, startY+5);
+                    const textUraian = doc.splitTextToSize(`URAIAN: ${d.uraian}`, 170); const textTindak = doc.splitTextToSize(`TINDAK LANJUT: ${d.tindak || '-'}`, 170);
+                    doc.setFont("helvetica", "normal"); doc.text(textUraian, 18, startY+14); doc.text(textTindak, 18, startY+14 + (textUraian.length * 5));
+                    const height = 18 + (textUraian.length * 5) + (textTindak.length * 5); doc.setDrawColor(200); doc.line(15, startY+height, 195, startY+height); startY += height + 5;
                 });
             }
-
-            // Tanda Tangan
-            let fy = doc.internal.pageSize.height - 40;
-            const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-            doc.setFont("helvetica", "normal"); doc.text(`Makassar, ${now}`, 140, fy);
-            doc.text("Guru Pembimbing,", 140, fy+5);
-            doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+25);
-            doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip || '-'}`, 140, fy+30);
-
+            let fy = doc.internal.pageSize.height - 40; const now = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}); doc.setFont("helvetica", "normal"); doc.text(`Makassar, ${now}`, 140, fy); doc.text("Guru Pembimbing,", 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+25); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip || '-'}`, 140, fy+30);
             doc.save(`Catatan_Siswa_${Date.now()}.pdf`);
         }
 
@@ -1048,9 +977,9 @@
                     if(filter !== 'all') filteredData = d.data.filter(r => r.jenis === filter);
                     if(filter === 'all') {
                         document.getElementById('previewMeta').innerText = `LOG NILAI (${d.mapel}) - SEMUA`;
-                        th.innerHTML=`<tr><th class="p-3">Tgl</th><th class="p-3">Nama</th><th class="p-3">Jenis</th><th class="p-3">Topik</th><th class="p-3">Nilai</th></tr>`;
+                        th.innerHTML=`<tr><th class="p-3">Tgl</th><th class="p-3">Nama</th><th class="p-3">Jenis</th><th class="p-3">Topik</th><th class="p-3">Nilai</th><th class="p-3 text-center">Aksi</th></tr>`;
                         const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=filteredData.slice(start,end);
-                        pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-xs font-mono text-slate-500">${new Date(r.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-xs uppercase font-bold text-slate-500">${r.jenis}</td><td class="p-3 italic text-slate-500">${r.topik}</td><td class="p-3 font-bold text-slate-800 dark:text-white">${r.nilai}</td></tr>`);
+                        pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-xs font-mono text-slate-500">${new Date(r.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-xs uppercase font-bold text-slate-500">${r.jenis}</td><td class="p-3 italic text-slate-500">${r.topik}</td><td class="p-3 font-bold text-slate-800 dark:text-white">${r.nilai}</td><td class="p-3">${getActionButtonsNilai(r.idUnik, r.nilai)}</td></tr>`);
                         document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(filteredData.length/reportRows)}`;
                     } else {
                         document.getElementById('previewMeta').innerText = `MATRIX NILAI: ${filter.toUpperCase()}`;
@@ -1193,7 +1122,169 @@
             ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
             document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
         }
+
+        // --- NEW FEATURES HELPER (V38) ---
+        function togglePassword() {
+            const p = document.getElementById('password');
+            const i = document.getElementById('eyeIcon');
+            if (p.type === 'password') {
+                p.type = 'text';
+                i.classList.remove('fa-eye');
+                i.classList.add('fa-eye-slash');
+            } else {
+                p.type = 'password';
+                i.classList.remove('fa-eye-slash');
+                i.classList.add('fa-eye');
+            }
+        }
+        // --- LANJUTAN KODE FRONTEND (FITUR EDIT & HAPUS) ---
+
+        // 1. Tombol Aksi untuk Tabel Nilai (Mode Detail)
+        function getActionButtonsNilai(id, nilaiLama) {
+            return `<div class="flex gap-2 justify-end">
+                <button onclick="editNilai('${id}', '${nilaiLama}')" class="text-amber-500 hover:text-amber-600 transition"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="hapusData('${id}', 'DataNilai', fetchNilaiReport)" class="text-red-500 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+        }
+
+        // 2. Fungsi Hapus Universal (Bisa untuk Nilai & Jurnal)
+        async function hapusData(id, sheetName, callbackRefresh) {
+            const result = await Swal.fire({
+                title: 'Hapus Data?', 
+                text: "Data yang dihapus tidak bisa dikembalikan!", 
+                icon: 'warning',
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
+
+            if (result.isConfirmed) {
+                const r = await apiCall('deleteItem', { id: id, sheetName: sheetName });
+                if (r.status === 'success') {
+                    Swal.fire('Terhapus', r.message, 'success');
+                    if(callbackRefresh) callbackRefresh(); // Refresh tabel otomatis
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
+
+        // 3. Fungsi Edit Nilai
+        async function editNilai(id, oldVal) {
+            const { value: newVal } = await Swal.fire({
+                title: 'Edit Nilai', 
+                input: 'number', 
+                inputValue: oldVal,
+                inputAttributes: { min: 0, max: 100 },
+                showCancelButton: true, 
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal'
+            });
+
+            if (newVal) {
+                const r = await apiCall('updateNilai', { id: id, nilaiBaru: newVal });
+                if (r.status === 'success') {
+                    Swal.fire('Berhasil', r.message, 'success');
+                    fetchNilaiReport(); // Refresh tabel
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
+
+        // 4. Logika Edit Jurnal (Menyiapkan Form)
+        function setupEditJurnal(idx) {
+            const data = globalJurnalHistory[idx];
+            // Isi form dengan data lama dari tabel
+            document.getElementById('editJurnalId').value = data.id || ''; 
+            // Konversi format tanggal agar terbaca input date HTML
+            try {
+                document.getElementById('jurDate').value = new Date(data.date).toISOString().split('T')[0];
+            } catch(e) { console.log('Date parse error', e); }
+            
+            document.getElementById('jurKelas').value = data.kelas;
+            document.getElementById('jurJam').value = data.jam;
+            document.getElementById('jurMateri').value = data.materi;
+            document.getElementById('jurMetode').value = data.metode;
+            document.getElementById('jurTindak').value = data.tindak;
+            document.getElementById('jurCatatan').value = data.catatan;
+            
+            // Tampilkan Badge Mode Edit
+            document.getElementById('editModeBadge').classList.remove('hidden');
+            
+            // Pindah Tab ke Input
+            switchJurnalTab('input');
+            Swal.fire({icon:'info', title:'Mode Edit Aktif', text:'Silakan ubah data lalu tekan tombol Simpan Jurnal.', timer:2000, showConfirmButton:false});
+        }
+
+        // 5. Batal Edit Jurnal
+        function cancelEditJurnal() {
+            document.getElementById('editJurnalId').value = '';
+            document.getElementById('editModeBadge').classList.add('hidden');
+            
+            // Reset Form
+            document.getElementById('jurMateri').value = '';
+            document.getElementById('jurCatatan').value = '';
+            document.getElementById('jurTindak').value = '';
+            document.getElementById('jurJam').value = '';
+            document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+            
+            Swal.fire('Edit Dibatalkan', 'Form telah dikosongkan.', 'info');
+        }
+
+        // 6. OVERRIDE Save Jurnal (Agar Cerdas Mendeteksi Edit vs Baru)
+        // Fungsi ini akan menimpa fungsi saveJurnal() yang lama
+        async function saveJurnal() {
+            const editId = document.getElementById('editJurnalId').value;
+            
+            const p = {
+                id: editId, // Kirim ID jika sedang edit, kosong jika baru
+                date: document.getElementById('jurDate').value,
+                kelas: document.getElementById('jurKelas').value,
+                jam: document.getElementById('jurJam').value,
+                materi: document.getElementById('jurMateri').value,
+                metode: document.getElementById('jurMetode').value,
+                tindak: document.getElementById('jurTindak').value,
+                catatan: document.getElementById('jurCatatan').value,
+                s_total: document.getElementById('jurStatTotal').innerText,
+                s_hadir: document.getElementById('jurStatHadir').innerText,
+                s_absen: document.getElementById('jurStatAbsen').innerText,
+                guru: currentUser.nama, 
+                mapel: currentUser.mapel
+            };
+            
+            // Validasi Sederhana
+            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Data Belum Lengkap', 'Mohon lengkapi Kelas, Jam, dan Materi Pokok.', 'warning');
+            
+            // Tentukan Action: Simpan Baru atau Update?
+            let action = 'saveJurnal';
+            if (editId !== "") action = 'updateJurnal';
+
+            const r = await apiCall(action, p);
+            
+            if(r.status === 'success') {
+                Swal.fire({
+                    icon:'success', 
+                    title: editId ? 'Jurnal Diperbarui' : 'Jurnal Tersimpan', 
+                    showConfirmButton:false, 
+                    timer:1500
+                });
+
+                if(editId) {
+                    cancelEditJurnal(); // Keluar mode edit setelah update
+                } else {
+                    // Reset form jika simpan baru
+                    document.getElementById('jurMateri').value = ''; 
+                    document.getElementById('jurCatatan').value = '';
+                    document.getElementById('jurJam').value = '';
+                    document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+                }
+            } else {
+                Swal.fire('Gagal', r.message, 'error');
+            }
+        }
     </script>
 </body>
-
 </html>
+				
