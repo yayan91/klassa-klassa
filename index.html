@@ -380,7 +380,7 @@
                                 </div>
                                 <div class="space-y-3">
                                     <div class="grid grid-cols-2 gap-2"><input type="date" id="rekapStart" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white"><input type="date" id="rekapEnd" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-3 py-3 text-xs font-bold text-slate-700 dark:text-white"></div>
-                                    <div class="flex gap-2"><button onclick="fetchReportData()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNativePDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div>
+                                    <div class="flex gap-2"><button onclick="fetchReportData()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNativePDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div><button onclick="exportToExcel()" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-emerald-700 transition shadow shadow-emerald-500/30"><i class="fa-solid fa-file-excel mr-2"></i> UNDUH EXCEL</button>
                                 </div>
                             </div>
                         </div>
@@ -402,7 +402,7 @@
                                 </div>
                                 <div class="space-y-3">
                                     <div class="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-[10px] text-amber-700 dark:text-amber-400 font-medium leading-relaxed"><i class="fa-solid fa-info-circle mr-1"></i> Data yang ditampilkan otomatis difilter berdasarkan <b>Mata Pelajaran Anda</b> saat ini.</div>
-                                    <div class="flex gap-2"><button onclick="fetchNilaiReport()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNilaiPDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div>
+                                    <div class="flex gap-2"><button onclick="fetchNilaiReport()" class="flex-1 bg-slate-800 dark:bg-slate-700 text-white py-3 rounded-xl font-bold text-xs hover:bg-slate-900 transition shadow">PREVIEW</button><button onclick="generateNilaiPDF()" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-red-700 transition shadow shadow-red-500/30"><i class="fa-solid fa-file-pdf"></i> UNDUH PDF</button></div><button onclick="exportToExcel()" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-emerald-700 transition shadow shadow-emerald-500/30"><i class="fa-solid fa-file-excel mr-2"></i> UNDUH EXCEL</button>
                                 </div>
                             </div>
                         </div>
@@ -1369,6 +1369,59 @@
 	function closeProfile() {
 		document.getElementById('modalProfile').classList.add('hidden');
 	}
+		// --- FITUR EXPORT EXCEL (SIMPLE) ---
+		function exportToExcel() {
+			// Cek apakah data ada
+			if(!globalReportData || !globalReportData.data || globalReportData.data.length === 0) {
+				return Swal.fire('Data Kosong', 'Silakan klik PREVIEW terlebih dahulu.', 'warning');
+        }
+
+        const d = globalReportData;
+        let content = "";
+        let filename = "";
+
+        // 1. Tentukan Header & Isi Berdasarkan Tipe Laporan
+        if(d.type === 'absen') {
+            filename = `Laporan_Absensi_${d.k}.xls`;
+            // Header HTML Table
+            content += `<table border="1"><thead><tr style="background-color:#4f46e5;color:white;"><th>No</th><th>Nama Siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th>Total</th></tr></thead><tbody>`;
+            // Isi Data
+            d.data.forEach((r, i) => {
+                let total = r.h + r.s + r.i + r.a;
+                content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.h}</td><td>${r.s}</td><td>${r.i}</td><td style="color:red;font-weight:bold;">${r.a}</td><td>${total}</td></tr>`;
+            });
+        } 
+        else if (d.type === 'nilai') {
+            filename = `Leger_Nilai_${d.mapel}_${d.k}.xls`;
+            // Jika Mode Rapor (Leger)
+            if(d.mode === 'rapor') {
+                const students = processRaporData(d.data);
+                content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Nama Siswa</th><th>Tugas</th><th>Praktek</th><th>UH</th><th>UTS</th><th>UAS</th><th>NA</th></tr></thead><tbody>`;
+                students.forEach((r, i) => {
+                    content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.rt}</td><td>${r.rp}</td><td>${r.ruh}</td><td>${r.uts}</td><td>${r.uas}</td><td style="font-weight:bold;">${r.na}</td></tr>`;
+                });
+            } else {
+               // Jika Mode Detail (Raw Data)
+               content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Topik</th><th>Nilai</th></tr></thead><tbody>`;
+               d.data.forEach((r, i) => {
+                   content += `<tr><td>${i+1}</td><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.nama}</td><td>${r.jenis}</td><td>${r.topik}</td><td>${r.nilai}</td></tr>`;
+               });
+            }
+        }
+        content += `</tbody></table>`;
+
+        // 2. Buat File & Download
+        const uri = 'data:application/vnd.ms-excel;base64,';
+        const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head></head><body>' + content + '</body></html>';
+        const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
+
+        const link = document.createElement("a");
+        link.href = uri + base64(template);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
     </script>
 </body>
 </html>
