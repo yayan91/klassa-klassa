@@ -146,6 +146,22 @@
                     </div>
 
                     <div id="dash-absen" class="space-y-8 animate-fade-in">
+					<div id="annoBox" class="hidden bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-l-4 border-amber-500 rounded-xl p-5 shadow-sm relative mb-6">
+						<button onclick="closeAnno()" class="absolute top-3 right-3 text-amber-600 dark:text-amber-400 hover:text-amber-800 transition"><i class="fa-solid fa-xmark"></i></button>
+						<div class="flex items-start gap-4">
+							<div class="bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg animate-bounce">
+								<i class="fa-solid fa-bullhorn"></i>
+							</div>
+							<div>
+								<div class="flex items-center gap-2 mb-1">
+									<span id="annoDate" class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">TANGGAL</span>
+									<span id="annoType" class="text-[10px] font-bold text-red-600 animate-pulse hidden">PENTING!</span>
+							</div>
+								<h3 id="annoTitle" class="font-extrabold text-lg text-slate-800 dark:text-white leading-tight">Judul Pengumuman</h3>
+								<p id="annoBody" class="text-sm text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">Isi pengumuman...</p>
+							</div>
+						</div>
+					</div>
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div><h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight" id="dashGreeting">Dashboard Absensi</h2><p class="text-slate-500 dark:text-slate-400 font-medium">Statistik Kehadiran Siswa.</p></div>
                             <div class="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 inline-flex"><button onclick="switchDashView('today')" id="btnViewToday" class="px-5 py-2 rounded-lg text-xs font-extrabold bg-primary text-white shadow-md transition">HARI INI</button><button onclick="switchDashView('total')" id="btnViewTotal" class="px-5 py-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition">TOTAL</button></div>
@@ -550,7 +566,7 @@
         async function loadSchoolInfo(){const r=await apiCall('getSchoolInfo'); if(r.status==='success')schoolInfo=r.data;}
 
         // --- DASHBOARD LOGIC ---
-        async function loadDashboardStats(){const r=await apiCall('getDashboardStats'); if(r.status==='success'){dashboardData=r; switchDashView('today'); renderTopAlpa(r.topAlpa);}}
+        async function loadDashboardStats(){const r=await apiCall('getDashboardStats'); loadAnnouncements(); if(r.status==='success'){dashboardData=r; switchDashView('today'); renderTopAlpa(r.topAlpa);}}
         function switchDashView(v){
             const d=v==='today'?dashboardData.today:dashboardData.total;
             const c=v==='today'?dashboardData.chartToday:dashboardData.chartTotal;
@@ -1422,6 +1438,31 @@
         link.click();
         document.body.removeChild(link);
     }
+		// --- LOGIKA PENGUMUMAN (V39) ---
+		async function loadAnnouncements() {
+			const r = await apiCall('getAnnouncements');
+			const box = document.getElementById('annoBox');
+
+			if (r.status === 'success' && r.data.judul) {
+				box.classList.remove('hidden'); // Munculkan kotak
+				document.getElementById('annoDate').innerText = r.data.tgl;
+				document.getElementById('annoTitle').innerText = r.data.judul;
+				document.getElementById('annoBody').innerText = r.data.isi;
+
+				// Cek jika tipe PENTING
+				if(r.data.tipe && r.data.tipe.toLowerCase().includes('penting')) {
+					document.getElementById('annoType').classList.remove('hidden');
+					box.classList.remove('from-amber-100', 'to-orange-100'); // Ganti warna jadi merah
+					box.classList.add('from-red-50', 'to-rose-50', 'border-red-500');
+				}
+			} else {
+				box.classList.add('hidden'); // Sembunyikan jika tidak ada info
+			}
+		}
+
+		function closeAnno() {
+			document.getElementById('annoBox').classList.add('hidden');
+	}
     </script>
 </body>
 </html>
