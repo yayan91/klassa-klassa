@@ -646,7 +646,7 @@
             if(p.length<5) return Swal.fire('Gagal','Nomor whatsapp kosong/belum diisi','error');
             const d = new Date(document.getElementById('inputDate').value).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
             const k = document.getElementById(`ket_${i}`).value || '-';
-            const t = `PESAN OTOMATIS-INFO ABSEN *${schoolInfo.nama}*: Tanggal ${d}, Nama: *${s.nama}*, Status: *${val}*, Ket: ${k}. Terima Kasih`;
+            const t = `Pesan Otomatis-INFO ABSEN *${schoolInfo.nama}*. Tanggal ${d}, Nama: *${s.nama}*, Status: *${val}*, Ket: ${k}. Terima Kasih`;
             window.open(`https://api.whatsapp.com/send?phone=${p}&text=${encodeURIComponent(t)}`,'_blank');
         }
         async function saveAbsen(){
@@ -1484,3 +1484,4 @@
     </script>
 </body>
 </html>
+
