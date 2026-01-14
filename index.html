@@ -64,6 +64,21 @@
         .card-grad-i { background: white; border-left: 5px solid #3b82f6; }
         .card-grad-a { background: white; border-left: 5px solid #ef4444; }
         .dark .card-grad-h, .dark .card-grad-s, .dark .card-grad-i, .dark .card-grad-a { background: #1e293b; border-color: inherit; }
+		
+		/* Animasi Running Text */
+		@keyframes ticker {
+			0% { transform: translateX(100%); }
+			100% { transform: translateX(-100%); }
+		}
+		.animate-ticker {
+			display: inline-block;
+			white-space: nowrap;
+			animation: ticker 20s linear infinite; /* Angka 20s bisa diganti (makin kecil makin cepat) */
+		}
+		/* Supaya saat mouse diarahkan, teks berhenti (biar enak dibaca) */
+		.animate-ticker:hover {
+			animation-play-state: paused;
+		}
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300">
@@ -141,6 +156,14 @@
             <div class="flex-1 overflow-y-auto p-5 md:p-10 pb-28 md:pb-10">
                 
                 <div id="page-dashboard" class="page-content space-y-8 animate-fade-in">
+					<div class="bg-slate-800 dark:bg-indigo-900 text-white py-2 px-4 rounded-xl shadow-md overflow-hidden flex items-center border border-slate-700">
+						<span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded mr-3 shrink-0 animate-pulse">INFO GURU</span>
+						<div class="flex-1 overflow-hidden relative h-5">
+							<div id="runningText" class="animate-ticker text-sm font-bold text-slate-200 uppercase tracking-wider w-full">
+								Memuat Info Guru...
+						</div>
+					</div>
+				</div>
                     <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
                         <button onclick="switchDashContent('absen')" id="btnDashAbsen" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-pie"></i> MONITORING ABSENSI</button>
                         <button onclick="switchDashContent('nilai')" id="btnDashNilai" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-line"></i> MONITORING NILAI</button>
@@ -209,7 +232,7 @@
                         <select id="inputKelas" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
                     </div>
                     <div class="relative"><i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchStudent" onkeyup="filterStudents()" class="w-full bg-white dark:bg-slate-900 pl-11 pr-4 py-3.5 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm transition dark:text-white" placeholder="Cari nama siswa..."></div>
-                    <div id="inputList" class="space-y-3"></div>
+                    <div id="inputList" class="space-y-3 max-h-[500px] overflow-y-auto p-2"></div>
                     <div id="fabSave" class="fixed bottom-24 right-6 z-50 hidden"><button onclick="saveAbsen()" class="bg-indigo-600 hover:bg-indigo-700 text-white pl-6 pr-8 py-4 rounded-full shadow-2xl shadow-indigo-500/40 font-extrabold flex items-center gap-3 transition transform hover:scale-105"><i class="fa-solid fa-floppy-disk text-xl"></i> SIMPAN ABSEN</button></div>
                 </div>
 
@@ -231,7 +254,7 @@
                     </div>
                     <div id="nilaiListWrapper" class="hidden">
                         <div class="flex justify-between items-center px-2 mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Daftar Siswa</span><span class="text-xs text-slate-400 italic">*Biarkan kosong jika belum dinilai</span></div>
-                        <div id="nilaiList" class="space-y-2"></div>
+                        <div id="nilaiList" class="space-y-2 max-h-[400px] overflow-y-auto p-2 border-t dark:border-slate-800 pt-2"></div>
                         <div class="fixed bottom-24 right-6 z-50"><button onclick="saveNilai()" class="bg-amber-500 hover:bg-amber-600 text-white pl-6 pr-8 py-4 rounded-full shadow-2xl shadow-amber-500/40 font-extrabold flex items-center gap-3 transition transform hover:scale-105"><i class="fa-solid fa-save text-xl"></i> SIMPAN NILAI</button></div>
                     </div>
                 </div>
@@ -287,7 +310,7 @@
                                 <h2 class="font-extrabold text-lg text-slate-800 dark:text-white">Riwayat Mengajar</h2>
                                 <button onclick="generateJurnalPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:bg-red-700 transition"><i class="fa-solid fa-file-pdf mr-2"></i> CETAK BULAN INI</button>
                             </div>
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-xl dark:border-slate-800">
                                 <table class="w-full text-xs text-left">
                                     <thead class="text-slate-400 uppercase font-bold bg-slate-50 dark:bg-slate-800">
                                         <tr><th class="p-3">Tgl</th><th class="p-3">Kls</th><th class="p-3">Jam</th><th class="p-3">Materi</th><th class="p-3 text-center">Ket</th><th class="p-3 text-center">Aksi</th></tr>
@@ -376,7 +399,7 @@
                             </div>
                         </div>
 
-                        <div id="catTimeline" class="space-y-4">
+                        <div id="catTimeline" class="space-y-4 max-h-[500px] overflow-y-auto p-4 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                             <div class="text-center py-10 text-slate-400 text-sm italic">Silakan filter data untuk melihat riwayat.</div>
                         </div>
                     </div>
@@ -548,6 +571,13 @@
                 document.getElementById('sidebarName').innerText=currentUser.nama.split(' ')[0]; document.getElementById('sidebarMapel').innerText=currentUser.mapel;
                 document.getElementById('greetingText').innerText = getGreeting(); document.getElementById('dashGreeting').innerText = getGreeting() + ", " + currentUser.nama.split(' ')[0];
                 document.getElementById('mapelTitle').innerText = `Analisis Akademik: ${currentUser.mapel}`;
+				// --- ISI RUNNING TEXT ---
+				const rText = document.getElementById('runningText');
+				if(rText) {
+					// Kita buat teksnya panjang supaya enak dilihat
+					const text = `SELAMAT DATANG, ${currentUser.nama}  —  GURU MATA PELAJARAN: ${currentUser.mapel}  —  SEMANGAT MENCERDASKAN ANAK BANGSA!  —  JANGAN LUPA ISI ABSEN DAN JURNAL HARI INI.`;
+					rText.innerText = text;
+				}
                 document.getElementById('loginScreen').style.display='none'; document.getElementById('mainApp').classList.remove('hidden');
                 loadDashboardStats(); loadClasses(); loadSchoolInfo();
                 const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true}); Toast.fire({icon: 'success', title: 'Berhasil Masuk'});
@@ -624,7 +654,7 @@
         async function loadInputData(){
             const k=document.getElementById('inputKelas').value, t=document.getElementById('inputDate').value;
             if(!k||!t)return;
-            const l=document.getElementById('inputList'); l.innerHTML='Loading...';
+            const l=document.getElementById('inputList'); l.innerHTML = getSkeletonLoading(5);
             const r=await apiCall('getStudents',{kelas:k,tanggal:t}); l.innerHTML='';
             if(r.status==='success'){
                 currentStudents=r.data; document.getElementById('fabSave').classList.remove('hidden');
@@ -664,7 +694,7 @@
             if(!top) return Swal.fire('Isi Topik', 'Silakan isi Topik/Keterangan Penilaian.', 'warning');
             document.getElementById('nilaiListWrapper').classList.remove('hidden');
             const l = document.getElementById('nilaiList');
-            l.innerHTML = '<div class="text-center py-4"><div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-amber-500 mx-auto"></div></div>';
+            l.innerHTML = getSkeletonLoading(5);
             const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'});
             if(r.status === 'success') {
                 currentNilaiStudents = r.data;
@@ -888,7 +918,7 @@
             };
 
             const l = document.getElementById('catTimeline');
-            l.innerHTML = '<div class="text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-2xl"></i></div>';
+            l.innerHTML = getSkeletonLoading(3);
 
             const r = await apiCall('getCatatanHistory', p);
             if(r.status === 'success' && r.data.length > 0) {
@@ -1164,7 +1194,7 @@
         async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
         async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
         function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
-        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = '<div class="flex flex-col items-center justify-center py-10"><div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div><p class="mt-2 text-xs font-bold text-slate-400">Sedang mencari data...</p></div>'; const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
+        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = getSkeletonLoading(5); const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
         function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
         function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
         function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
@@ -1464,6 +1494,30 @@
 		function closeAnno() {
 			document.getElementById('annoBox').classList.add('hidden');
 	}
+		// --- FUNGSI SKELETON LOADING (EFEK DENYUT) ---
+		function getSkeletonLoading(jumlah) {
+			let html = '';
+			for(let i=0; i<jumlah; i++) {
+				html += `
+				<div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-3 animate-pulse">
+					<div class="flex justify-between items-center mb-4">
+						<div class="space-y-2">
+							<div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-40"></div>
+							<div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+						</div>
+						<div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+					</div>
+					<div class="grid grid-cols-4 gap-2 mb-4">
+						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+					</div>
+					<div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl w-full"></div>
+				</div>`;
+			}
+			return html;
+	}
 		// Fungsi Pesta
 		function rayakanSukses() {
 			var count = 200;
@@ -1484,4 +1538,3 @@
     </script>
 </body>
 </html>
-
