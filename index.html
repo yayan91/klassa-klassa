@@ -12,7 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- [NEW] QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -64,21 +66,22 @@
         .card-grad-i { background: white; border-left: 5px solid #3b82f6; }
         .card-grad-a { background: white; border-left: 5px solid #ef4444; }
         .dark .card-grad-h, .dark .card-grad-s, .dark .card-grad-i, .dark .card-grad-a { background: #1e293b; border-color: inherit; }
-		
-		/* Animasi Running Text */
-		@keyframes ticker {
-			0% { transform: translateX(100%); }
-			100% { transform: translateX(-100%); }
-		}
-		.animate-ticker {
-			display: inline-block;
-			white-space: nowrap;
-			animation: ticker 20s linear infinite; /* Angka 20s bisa diganti (makin kecil makin cepat) */
-		}
-		/* Supaya saat mouse diarahkan, teks berhenti (biar enak dibaca) */
-		.animate-ticker:hover {
-			animation-play-state: paused;
-		}
+        
+        /* Animasi Running Text */
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 20s linear infinite;
+        }
+        .animate-ticker:hover {
+            animation-play-state: paused;
+        }
+        /* QR Flip Effect */
+        .qr-hidden { display: none !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300">
@@ -156,19 +159,17 @@
             <div class="flex-1 overflow-y-auto p-5 md:p-10 pb-28 md:pb-10">
                 
                 <div id="page-dashboard" class="page-content space-y-8 animate-fade-in">
-					<div class="bg-slate-800 dark:bg-indigo-900 text-white py-2 px-4 rounded-xl shadow-md overflow-hidden flex items-center border border-slate-700">
-						<span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded mr-3 shrink-0 animate-pulse">INFO GURU</span>
-						<div class="flex-1 overflow-hidden relative h-5">
-							<div id="runningText" class="animate-ticker text-sm font-bold text-slate-200 uppercase tracking-wider w-full">
-								Memuat Info Guru...
-						</div>
-					</div>
-				</div>
+                    <div class="bg-slate-800 dark:bg-indigo-900 text-white py-2 px-4 rounded-xl shadow-md overflow-hidden flex items-center border border-slate-700">
+                        <span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded mr-3 shrink-0 animate-pulse">INFO GURU</span>
+                        <div class="flex-1 overflow-hidden relative h-5">
+                            <div id="runningText" class="animate-ticker text-sm font-bold text-slate-200 uppercase tracking-wider w-full">
+                                Memuat Info Guru...
+                            </div>
+                        </div>
+                    </div>
                     <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-2 sticky top-0 z-20">
                         <button onclick="switchDashContent('absen')" id="btnDashAbsen" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-pie"></i> MONITORING ABSENSI</button>
                         <button onclick="switchDashContent('nilai')" id="btnDashNilai" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-line"></i> MONITORING NILAI</button>
-                        
-                        <!-- FILTER DASHBOARD BARU (V41) -->
                         <div class="bg-indigo-50 dark:bg-slate-800 rounded-xl px-3 py-1 flex items-center gap-2 border border-indigo-100 dark:border-slate-700">
                             <i class="fa-solid fa-filter text-indigo-500"></i>
                             <select id="dashFilterKelas" onchange="refreshDashboard()" class="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer">
@@ -178,22 +179,22 @@
                     </div>
 
                     <div id="dash-absen" class="space-y-8 animate-fade-in">
-					<div id="annoBox" class="hidden bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-l-4 border-amber-500 rounded-xl p-5 shadow-sm relative mb-6">
-						<button onclick="closeAnno()" class="absolute top-3 right-3 text-amber-600 dark:text-amber-400 hover:text-amber-800 transition"><i class="fa-solid fa-xmark"></i></button>
-						<div class="flex items-start gap-4">
-							<div class="bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg animate-bounce">
-								<i class="fa-solid fa-bullhorn"></i>
-							</div>
-							<div>
-								<div class="flex items-center gap-2 mb-1">
-									<span id="annoDate" class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">TANGGAL</span>
-									<span id="annoType" class="text-[10px] font-bold text-red-600 animate-pulse hidden">PENTING!</span>
-							</div>
-								<h3 id="annoTitle" class="font-extrabold text-lg text-slate-800 dark:text-white leading-tight">Judul Pengumuman</h3>
-								<p id="annoBody" class="text-sm text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">Isi pengumuman...</p>
-							</div>
-						</div>
-					</div>
+                    <div id="annoBox" class="hidden bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-l-4 border-amber-500 rounded-xl p-5 shadow-sm relative mb-6">
+                        <button onclick="closeAnno()" class="absolute top-3 right-3 text-amber-600 dark:text-amber-400 hover:text-amber-800 transition"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="flex items-start gap-4">
+                            <div class="bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg animate-bounce">
+                                <i class="fa-solid fa-bullhorn"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span id="annoDate" class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">TANGGAL</span>
+                                    <span id="annoType" class="text-[10px] font-bold text-red-600 animate-pulse hidden">PENTING!</span>
+                            </div>
+                                <h3 id="annoTitle" class="font-extrabold text-lg text-slate-800 dark:text-white leading-tight">Judul Pengumuman</h3>
+                                <p id="annoBody" class="text-sm text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">Isi pengumuman...</p>
+                            </div>
+                        </div>
+                    </div>
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div><h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight" id="dashGreeting">Dashboard Absensi</h2><p class="text-slate-500 dark:text-slate-400 font-medium">Statistik Kehadiran Siswa.</p></div>
                             <div class="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 inline-flex"><button onclick="switchDashView('today')" id="btnViewToday" class="px-5 py-2 rounded-lg text-xs font-extrabold bg-primary text-white shadow-md transition">HARI INI</button><button onclick="switchDashView('total')" id="btnViewTotal" class="px-5 py-2 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition">TOTAL</button></div>
@@ -235,9 +236,17 @@
                 </div>
 
                 <div id="page-input" class="page-content hidden space-y-6">
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 sticky top-0 z-20 flex flex-col md:flex-row gap-3">
-                        <input type="date" id="inputDate" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
-                        <select id="inputKelas" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 sticky top-0 z-20 flex flex-col gap-3">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="date" id="inputDate" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                            <select id="inputKelas" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
+                        </div>
+                        <!-- [NEW] Turbo Filter -->
+                        <div class="flex gap-2 overflow-x-auto pb-1" id="turboFilterContainer" style="display:none;">
+                            <button onclick="setTurboFilter('all')" id="tf-all" class="px-4 py-2 rounded-full text-xs font-bold bg-slate-800 text-white transition whitespace-nowrap">Semua</button>
+                            <button onclick="setTurboFilter('hadir')" id="tf-hadir" class="px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-200 transition whitespace-nowrap hover:bg-slate-50">Hadir</button>
+                            <button onclick="setTurboFilter('absen')" id="tf-absen" class="px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-200 transition whitespace-nowrap hover:bg-slate-50">Tidak Hadir</button>
+                        </div>
                     </div>
                     <div class="relative"><i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchStudent" onkeyup="filterStudents()" class="w-full bg-white dark:bg-slate-900 pl-11 pr-4 py-3.5 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm transition dark:text-white" placeholder="Cari nama siswa..."></div>
                     <div id="inputList" class="space-y-3 max-h-[500px] overflow-y-auto p-2"></div>
@@ -509,8 +518,12 @@
 
         <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 text-center relative">
             <button onclick="closeProfile()" class="absolute top-4 right-4 text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <div class="w-24 h-24 bg-white rounded-full mx-auto p-1 shadow-xl mb-3">
-                <img id="profImg" src="" class="w-full h-full rounded-full bg-slate-100 object-cover">
+            <div class="w-24 h-24 bg-white rounded-full mx-auto p-1 shadow-xl mb-3 cursor-pointer relative group" onclick="toggleQR()">
+                <img id="profImg" src="" class="w-full h-full rounded-full bg-slate-100 object-cover transition-opacity duration-300 group-hover:opacity-50">
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <i class="fa-solid fa-qrcode text-indigo-600 text-3xl"></i>
+                </div>
+                <div id="qrContainer" class="hidden absolute inset-0 bg-white rounded-full flex items-center justify-center p-1"></div>
             </div>
             <h2 id="profName" class="text-white font-black text-xl tracking-tight leading-tight">Nama Siswa</h2>
             <p id="profKelas" class="text-indigo-200 text-xs font-bold uppercase tracking-widest mt-1">Kelas - NISN</p>
@@ -561,6 +574,7 @@
                 });
                 if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark');
                 loadClasses(); renderJamButtons();
+                initAutoSave(); // [NEW] Init AutoSave
             } catch(e) { console.error("Load Error:", e); }
         };
 
@@ -702,10 +716,12 @@
             const l=document.getElementById('inputList'); l.innerHTML = getSkeletonLoading(5);
             const r=await apiCall('getStudents',{kelas:k,tanggal:t}); l.innerHTML='';
             if(r.status==='success'){
-                currentStudents=r.data; document.getElementById('fabSave').classList.remove('hidden');
+                currentStudents=r.data; 
+                document.getElementById('fabSave').classList.remove('hidden');
+                document.getElementById('turboFilterContainer').style.display = 'flex'; // [NEW] Show Filter
                 l.innerHTML = currentStudents.map((s,i) => {
                     const st = s.status_today || 'Hadir'; const waOk = st !== 'Hadir';
-                    return `<div class="student-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition mb-3" data-name="${s.nama.toLowerCase()}">
+                    return `<div class="student-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition mb-3" data-name="${s.nama.toLowerCase()}" data-status="${st}">
                         <div class="flex justify-between items-center mb-4"><div><h3 onclick="viewProfile('${s.nisn}')" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 text-lg cursor-pointer transition-transform duration-300 hover:scale-105 inline-block"><i class="fa-solid fa-id-card-clip mr-2 text-indigo-500"></i>${s.nama}</h3><span class="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md tracking-wider">${s.nisn}</span></div><button id="waBtn-${i}" onclick="sendWA(${i})" class="w-10 h-10 rounded-full flex items-center justify-center transition ${waOk?'bg-green-500 text-white shadow-lg cursor-pointer':'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed'}" ${waOk?'':'disabled'}><i class="fa-brands fa-whatsapp text-lg"></i></button></div>
                         <div class="grid grid-cols-4 gap-2 mb-4">${['Hadir','Sakit','Izin','Alpa'].map(x=>`<label class="status-radio cursor-pointer group w-full"><input type="radio" name="st_${i}" value="${x}" class="hidden r-${x[0].toLowerCase()}" ${st===x?'checked':''} onchange="updWA(${i}, '${x}')"><div class="py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold text-xs text-center border border-slate-100 dark:border-slate-700 transition group-active:scale-95">${x[0]}</div></label>`).join('')}</div>
                         <input type="text" id="ket_${i}" value="${s.ket_today}" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border-none rounded-xl px-4 py-3 text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary transition outline-none font-medium" placeholder="Keterangan (Opsional)">
@@ -713,8 +729,32 @@
                 }).join('');
             }
         }
+        
+        // [NEW] Turbo Filter Function
+        function setTurboFilter(type) {
+            document.querySelectorAll('#turboFilterContainer button').forEach(b => {
+                b.className = "px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-200 transition whitespace-nowrap hover:bg-slate-50";
+            });
+            document.getElementById('tf-'+type).className = "px-4 py-2 rounded-full text-xs font-bold bg-slate-800 text-white transition whitespace-nowrap";
+            
+            document.querySelectorAll('.student-card').forEach(card => {
+                // Update dynamic status check based on current radio selection in card
+                const currentStatus = card.querySelector('input[type="radio"]:checked').value;
+                if(type === 'all') card.style.display = 'block';
+                else if(type === 'hadir') card.style.display = (currentStatus === 'Hadir') ? 'block' : 'none';
+                else if(type === 'absen') card.style.display = (currentStatus !== 'Hadir') ? 'block' : 'none';
+            });
+        }
+
         function filterStudents(){const term=document.getElementById('searchStudent').value.toLowerCase(); document.querySelectorAll('.student-card').forEach(c=>{c.style.display=c.dataset.name.includes(term)?'block':'none'})}
-        function updWA(i, v){const b=document.getElementById(`waBtn-${i}`); if(v!=='Hadir'){b.disabled=false;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-green-500 text-white shadow-lg cursor-pointer transform scale-110"}else{b.disabled=true;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed"}}
+        function updWA(i, v){
+            const b=document.getElementById(`waBtn-${i}`); 
+            // Update Card Data Attribute for filtering
+            const card = b.closest('.student-card');
+            // Re-apply filter if active
+            
+            if(v!=='Hadir'){b.disabled=false;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-green-500 text-white shadow-lg cursor-pointer transform scale-110"}else{b.disabled=true;b.className="w-10 h-10 rounded-full flex items-center justify-center transition bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed"}
+        }
         function sendWA(i){
             const s=currentStudents[i]; const val = document.querySelector(`input[name="st_${i}"]:checked`).value;
             let p=s.nowa?String(s.nowa).replace(/\D/g,''):''; if(p.startsWith('0'))p='62'+p.substring(1);
@@ -936,6 +976,7 @@
             const r = await apiCall('saveCatatan', p);
             if(r.status === 'success') {
                 Swal.fire({icon: 'success', title: 'Catatan Tersimpan', showConfirmButton: false, timer: 1500}); rayakanSukses();
+                clearDrafts(); // [NEW] Clear Draft
                 document.getElementById('catUraian').value = '';
                 document.getElementById('catTindak').value = '';
                 document.getElementById('catSiswa').value = '';
@@ -1197,310 +1238,342 @@
         }
 
         async function generateNilaiPDF(){
-            if(!globalReportData || globalReportData.type !== 'nilai') { await fetchNilaiReport(); if(!globalReportData.data) return; }
-            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(245, 158, 11); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
-            let title = ""; let head=[], body=[]; let pdfData = d.data;
-            if(d.mode === 'rapor') {
-                title = `LEGER NILAI: ${d.mapel}`; let students = processRaporData(d.data);
-                head=[['No','Nama','Tugas','Praktek','UH','UTS','UAS','NA']]; body = students.map((r,i)=>[i+1, r.nama, r.rt, r.rp, r.ruh, r.uts, r.uas, r.na]);
-            } else if (d.mode === 'detail') {
-                 const filter = document.getElementById('filterNilaiJenis').value;
-                 if(filter === 'all') { title = `LOG NILAI (ALL): ${d.mapel}`; head=[['No','Tanggal','Nama','Jenis','Topik','Nilai']]; body = d.data.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.nama, r.jenis, r.topik, r.nilai]);
-                 } else { title = `DAFTAR NILAI: ${filter.toUpperCase()}`; pdfData = d.data.filter(r => r.jenis === filter); let matrix = processMatrixData(pdfData); let hRow = ['No', 'Nama']; for(let i=1; i<=matrix.maxCols; i++) hRow.push(`${i}`); hRow.push('Rata'); head=[hRow]; body = matrix.data.map((r,i) => { let row = [i+1, r.nama]; for(let j=0; j<matrix.maxCols; j++) row.push(r.scores[j]||'-'); row.push(r.avg); return row; }); }
-            } else if (d.mode === 'siswa') {
-                const sn = document.getElementById('filterNilaiSiswa'); title = `PORTOFOLIO: ${sn.options[sn.selectedIndex].text}`; const nisn = document.getElementById('filterNilaiSiswa').value; const pData = d.data.filter(r => String(r.nisn) === String(nisn));
-                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
-                let startY = 55; ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'].forEach(cat => {
-                    const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
-                    if(items.length > 0) {
-                        doc.setFont("helvetica", "bold"); doc.setTextColor(100); doc.text(cat, 15, startY);
-                        const subBody = items.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.topik, r.nilai]);
-                        const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length); subBody.push(['','','RATA-RATA', avg]);
-                        doc.autoTable({startY: startY+2, head:[['No','Tanggal','Topik','Nilai']], body:subBody, theme:'grid', didParseCell: function(data) { if(data.row.index === subBody.length-1) data.cell.styles.fontStyle='bold'; } }); startY = doc.lastAutoTable.finalY + 10;
-                    }
-                });
-                let fy = startY + 10; if(fy>250){doc.addPage();fy=20;}
-                const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
-                doc.save(`Portofolio_${title}_${Date.now()}.pdf`); return; 
-            }
-            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'});
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
-            doc.autoTable({startY: 55, head:head, body:body, theme:'striped',headStyles:{fillColor:[245, 158, 11]}});
-            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
-            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
-            doc.save(`Laporan_${title}_${Date.now()}.pdf`);
-        }
+            if(!globalReportData || globalReportData.type !== 'nilai') { await fetchNilaiReport(); if(!globalReportData.data) return; }
+            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(245, 158, 11); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            let title = ""; let head=[], body=[]; let pdfData = d.data;
+            if(d.mode === 'rapor') {
+                title = `LEGER NILAI: ${d.mapel}`; let students = processRaporData(d.data);
+                head=[['No','Nama','Tugas','Praktek','UH','UTS','UAS','NA']]; body = students.map((r,i)=>[i+1, r.nama, r.rt, r.rp, r.ruh, r.uts, r.uas, r.na]);
+            } else if (d.mode === 'detail') {
+                 const filter = document.getElementById('filterNilaiJenis').value;
+                 if(filter === 'all') { title = `LOG NILAI (ALL): ${d.mapel}`; head=[['No','Tanggal','Nama','Jenis','Topik','Nilai']]; body = d.data.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.nama, r.jenis, r.topik, r.nilai]);
+                 } else { title = `DAFTAR NILAI: ${filter.toUpperCase()}`; pdfData = d.data.filter(r => r.jenis === filter); let matrix = processMatrixData(pdfData); let hRow = ['No', 'Nama']; for(let i=1; i<=matrix.maxCols; i++) hRow.push(`${i}`); hRow.push('Rata'); head=[hRow]; body = matrix.data.map((r,i) => { let row = [i+1, r.nama]; for(let j=0; j<matrix.maxCols; j++) row.push(r.scores[j]||'-'); row.push(r.avg); return row; }); }
+            } else if (d.mode === 'siswa') {
+                const sn = document.getElementById('filterNilaiSiswa'); title = `PORTOFOLIO: ${sn.options[sn.selectedIndex].text}`; const nisn = document.getElementById('filterNilaiSiswa').value; const pData = d.data.filter(r => String(r.nisn) === String(nisn));
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+                let startY = 55; ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'].forEach(cat => {
+                    const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
+                    if(items.length > 0) {
+                        doc.setFont("helvetica", "bold"); doc.setTextColor(100); doc.text(cat, 15, startY);
+                        const subBody = items.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.topik, r.nilai]);
+                        const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length); subBody.push(['','','RATA-RATA', avg]);
+                        doc.autoTable({startY: startY+2, head:[['No','Tanggal','Topik','Nilai']], body:subBody, theme:'grid', didParseCell: function(data) { if(data.row.index === subBody.length-1) data.cell.styles.fontStyle='bold'; } }); startY = doc.lastAutoTable.finalY + 10;
+                    }
+                });
+                let fy = startY + 10; if(fy>250){doc.addPage();fy=20;}
+                const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+                doc.save(`Portofolio_${title}_${Date.now()}.pdf`); return; 
+            }
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+            doc.autoTable({startY: 55, head:head, body:body, theme:'striped',headStyles:{fillColor:[245, 158, 11]}});
+            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
+            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+            doc.save(`Laporan_${title}_${Date.now()}.pdf`);
+        }
 
-        function setPublicMode(m){document.getElementById('pubMode').value=m; document.getElementById('pubBtnKelas').className = m==='kelas' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubBtnSiswa').className = m==='siswa' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubSiswa').classList.toggle('hidden', m!=='siswa'); document.getElementById('pubList').innerHTML = ''; document.getElementById('pageInfo').innerText = '1/1';}
-        function togglePublic(s){document.getElementById('publicView').style.display = s ? 'flex' : 'none'; if(s) loadPublicClasses();}
-        async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
-        async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
-        function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
-        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = getSkeletonLoading(5); const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
-        function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
-        function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
-        function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
+        function setPublicMode(m){document.getElementById('pubMode').value=m; document.getElementById('pubBtnKelas').className = m==='kelas' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubBtnSiswa').className = m==='siswa' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubSiswa').classList.toggle('hidden', m!=='siswa'); document.getElementById('pubList').innerHTML = ''; document.getElementById('pageInfo').innerText = '1/1';}
+        function togglePublic(s){document.getElementById('publicView').style.display = s ? 'flex' : 'none'; if(s) loadPublicClasses();}
+        async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
+        async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
+        function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
+        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = getSkeletonLoading(5); const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
+        function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
+        function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
+        function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
 
-        function switchPage(p){
-            document.querySelectorAll('.page-content').forEach(e=>e.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden');
-            ['nav-dashboard','nav-input','nav-nilai','nav-rekap','nav-jurnal','nav-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('active-nav');e.classList.remove('bg-indigo-50');e.classList.remove('dark:bg-slate-800');e.classList.add('text-slate-500');e.classList.add('dark:text-slate-400')});
-            document.getElementById('nav-'+p).classList.add('active-nav'); document.getElementById('nav-'+p).classList.add('bg-indigo-50'); document.getElementById('nav-'+p).classList.add('dark:bg-slate-800');
-            ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
-            document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
-        }
+        function switchPage(p){
+            document.querySelectorAll('.page-content').forEach(e=>e.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden');
+            ['nav-dashboard','nav-input','nav-nilai','nav-rekap','nav-jurnal','nav-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('active-nav');e.classList.remove('bg-indigo-50');e.classList.remove('dark:bg-slate-800');e.classList.add('text-slate-500');e.classList.add('dark:text-slate-400')});
+            document.getElementById('nav-'+p).classList.add('active-nav'); document.getElementById('nav-'+p).classList.add('bg-indigo-50'); document.getElementById('nav-'+p).classList.add('dark:bg-slate-800');
+            ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
+            document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
+        }
 
-        // --- NEW FEATURES HELPER ---
-        function togglePassword() {
-            const p = document.getElementById('password');
-            const i = document.getElementById('eyeIcon');
-            if (p.type === 'password') {
-                p.type = 'text';
-                i.classList.remove('fa-eye');
-                i.classList.add('fa-eye-slash');
-            } else {
-                p.type = 'password';
-                i.classList.remove('fa-eye-slash');
-                i.classList.add('fa-eye');
-            }
-        }
-        // --- FITUR EDIT & HAPUS ---
+        // --- NEW FEATURES HELPER ---
+        function togglePassword() {
+            const p = document.getElementById('password');
+            const i = document.getElementById('eyeIcon');
+            if (p.type === 'password') {
+                p.type = 'text';
+                i.classList.remove('fa-eye');
+                i.classList.add('fa-eye-slash');
+            } else {
+                p.type = 'password';
+                i.classList.remove('fa-eye-slash');
+                i.classList.add('fa-eye');
+            }
+        }
+        // --- FITUR EDIT & HAPUS ---
 
-        // 1. Tombol Aksi untuk Tabel Nilai
-        function getActionButtonsNilai(id, nilaiLama) {
-            return `<div class="flex gap-2 justify-end">
-                <button onclick="editNilai('${id}', '${nilaiLama}')" class="text-amber-500 hover:text-amber-600 transition"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="hapusData('${id}', 'DataNilai', fetchNilaiReport)" class="text-red-500 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-        }
+        // 1. Tombol Aksi untuk Tabel Nilai
+        function getActionButtonsNilai(id, nilaiLama) {
+            return `<div class="flex gap-2 justify-end">
+                <button onclick="editNilai('${id}', '${nilaiLama}')" class="text-amber-500 hover:text-amber-600 transition"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="hapusData('${id}', 'DataNilai', fetchNilaiReport)" class="text-red-500 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+        }
 
-        // 2. Fungsi Hapus Universal
-        async function hapusData(id, sheetName, callbackRefresh) {
-            const result = await Swal.fire({
-                title: 'Hapus Data?', 
-                text: "Data yang dihapus tidak bisa dikembalikan!", 
-                icon: 'warning',
-                showCancelButton: true, 
-                confirmButtonColor: '#ef4444', 
-                confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
-            });
+        // 2. Fungsi Hapus Universal
+        async function hapusData(id, sheetName, callbackRefresh) {
+            const result = await Swal.fire({
+                title: 'Hapus Data?', 
+                text: "Data yang dihapus tidak bisa dikembalikan!", 
+                icon: 'warning',
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
 
-            if (result.isConfirmed) {
-                const r = await apiCall('deleteItem', { id: id, sheetName: sheetName });
-                if (r.status === 'success') {
-                    Swal.fire('Terhapus', r.message, 'success');
-                    if(callbackRefresh) callbackRefresh();
-                } else {
-                    Swal.fire('Gagal', r.message, 'error');
-                }
-            }
-        }
+            if (result.isConfirmed) {
+                const r = await apiCall('deleteItem', { id: id, sheetName: sheetName });
+                if (r.status === 'success') {
+                    Swal.fire('Terhapus', r.message, 'success');
+                    if(callbackRefresh) callbackRefresh();
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
 
-        // 3. Fungsi Edit Nilai
-        async function editNilai(id, oldVal) {
-            const { value: newVal } = await Swal.fire({
-                title: 'Edit Nilai', 
-                input: 'number', 
-                inputValue: oldVal,
-                inputAttributes: { min: 0, max: 100 },
-                showCancelButton: true, 
-                confirmButtonText: 'Simpan',
-                cancelButtonText: 'Batal'
-            });
+        // 3. Fungsi Edit Nilai
+        async function editNilai(id, oldVal) {
+            const { value: newVal } = await Swal.fire({
+                title: 'Edit Nilai', 
+                input: 'number', 
+                inputValue: oldVal,
+                inputAttributes: { min: 0, max: 100 },
+                showCancelButton: true, 
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal'
+            });
 
-            if (newVal) {
-                const r = await apiCall('updateNilai', { id: id, nilaiBaru: newVal });
-                if (r.status === 'success') {
-                    Swal.fire('Berhasil', r.message, 'success');
-                    fetchNilaiReport();
-                } else {
-                    Swal.fire('Gagal', r.message, 'error');
-                }
-            }
-        }
+            if (newVal) {
+                const r = await apiCall('updateNilai', { id: id, nilaiBaru: newVal });
+                if (r.status === 'success') {
+                    Swal.fire('Berhasil', r.message, 'success');
+                    fetchNilaiReport();
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
 
-        // 4. Logika Edit Jurnal
-        function setupEditJurnal(idx) {
-            const data = globalJurnalHistory[idx];
-            document.getElementById('editJurnalId').value = data.id || ''; 
-            try { document.getElementById('jurDate').value = new Date(data.date).toISOString().split('T')[0]; } catch(e) {}
-            document.getElementById('jurKelas').value = data.kelas;
-            document.getElementById('jurJam').value = data.jam;
-            document.getElementById('jurMateri').value = data.materi;
-            document.getElementById('jurMetode').value = data.metode;
-            document.getElementById('jurTindak').value = data.tindak;
-            document.getElementById('jurCatatan').value = data.catatan;
-            document.getElementById('editModeBadge').classList.remove('hidden');
-            switchJurnalTab('input');
-            Swal.fire({icon:'info', title:'Mode Edit Aktif', text:'Silakan ubah data lalu tekan tombol Simpan Jurnal.', timer:2000, showConfirmButton:false});
-        }
+        // 4. Logika Edit Jurnal
+        function setupEditJurnal(idx) {
+            const data = globalJurnalHistory[idx];
+            document.getElementById('editJurnalId').value = data.id || ''; 
+            try { document.getElementById('jurDate').value = new Date(data.date).toISOString().split('T')[0]; } catch(e) {}
+            document.getElementById('jurKelas').value = data.kelas;
+            document.getElementById('jurJam').value = data.jam;
+            document.getElementById('jurMateri').value = data.materi;
+            document.getElementById('jurMetode').value = data.metode;
+            document.getElementById('jurTindak').value = data.tindak;
+            document.getElementById('jurCatatan').value = data.catatan;
+            document.getElementById('editModeBadge').classList.remove('hidden');
+            switchJurnalTab('input');
+            Swal.fire({icon:'info', title:'Mode Edit Aktif', text:'Silakan ubah data lalu tekan tombol Simpan Jurnal.', timer:2000, showConfirmButton:false});
+        }
 
-        function cancelEditJurnal() {
-            document.getElementById('editJurnalId').value = '';
-            document.getElementById('editModeBadge').classList.add('hidden');
-            document.getElementById('jurMateri').value = '';
-            document.getElementById('jurCatatan').value = '';
-            document.getElementById('jurTindak').value = '';
-            document.getElementById('jurJam').value = '';
-            document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
-            Swal.fire('Edit Dibatalkan', 'Form telah dikosongkan.', 'info');
-        }
+        function cancelEditJurnal() {
+            document.getElementById('editJurnalId').value = '';
+            document.getElementById('editModeBadge').classList.add('hidden');
+            document.getElementById('jurMateri').value = '';
+            document.getElementById('jurCatatan').value = '';
+            document.getElementById('jurTindak').value = '';
+            document.getElementById('jurJam').value = '';
+            document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+            Swal.fire('Edit Dibatalkan', 'Form telah dikosongkan.', 'info');
+        }
 
-        // 5. OVERRIDE Save Jurnal
-        async function saveJurnal() {
-            const editId = document.getElementById('editJurnalId').value;
-            const p = {
-                id: editId,
-                date: document.getElementById('jurDate').value,
-                kelas: document.getElementById('jurKelas').value,
-                jam: document.getElementById('jurJam').value,
-                materi: document.getElementById('jurMateri').value,
-                metode: document.getElementById('jurMetode').value,
-                tindak: document.getElementById('jurTindak').value,
-                catatan: document.getElementById('jurCatatan').value,
-                s_total: document.getElementById('jurStatTotal').innerText,
-                s_hadir: document.getElementById('jurStatHadir').innerText,
-                s_absen: document.getElementById('jurStatAbsen').innerText,
-                guru: currentUser.nama, 
-                mapel: currentUser.mapel
-            };
-            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Data Belum Lengkap', 'Mohon lengkapi Kelas, Jam, dan Materi Pokok.', 'warning');
-            let action = editId !== "" ? 'updateJurnal' : 'saveJurnal';
-            const r = await apiCall(action, p);
-            if(r.status === 'success') {
-                Swal.fire({ icon:'success', title: editId ? 'Jurnal Diperbarui' : 'Jurnal Tersimpan', showConfirmButton:false, timer:1500 });
-                if(editId) { cancelEditJurnal(); } 
-                else {
-                    document.getElementById('jurMateri').value = ''; 
-                    document.getElementById('jurCatatan').value = '';
-                    document.getElementById('jurJam').value = '';
-                    document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
-                }
-            } else { Swal.fire('Gagal', r.message, 'error'); }
-		 }
-		// --- FITUR PROFIL 360 ---
-		async function viewProfile(nisn) {
-			const modal = document.getElementById('modalProfile');
-			modal.classList.remove('hidden');
-			document.getElementById('profName').innerText = "Memuat Data...";
-			document.getElementById('profKelas').innerText = "Mohon Tunggu...";
-			document.getElementById('profImg').src = "https://api.dicebear.com/9.x/micah/svg?seed=loading";
-			const r = await apiCall('getStudentProfile', { nisn: nisn });
-			if(r.status === 'success') {
-				const i = r.info;
-				document.getElementById('profName').innerText = i.nama;
-				document.getElementById('profKelas').innerText = `${i.kelas} • ${i.nisn}`;
-				document.getElementById('profImg').src = `https://api.dicebear.com/9.x/micah/svg?seed=${i.nama}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
-				document.getElementById('p-h').innerText = r.abs.h;
-				document.getElementById('p-s').innerText = r.abs.s;
-				document.getElementById('p-i').innerText = r.abs.i;
-				document.getElementById('p-a').innerText = r.abs.a;
-				document.getElementById('p-avg').innerText = r.avg || '-';
-				const nDiv = document.getElementById('profNotes');
-				if(r.notes.length > 0) {
-					nDiv.innerHTML = r.notes.map(n => 
-						`<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border-l-4 ${n.ket.includes('Prestasi')?'border-emerald-500':'border-red-500'}">
-							<div class="flex justify-between font-bold text-slate-700 dark:text-slate-300"><span>${n.ket}</span><span class="text-[10px] opacity-50">${n.tgl}</span></div>
-							<p class="mt-1 text-slate-500 truncate">${n.uraian}</p>
-					</div>`
-				).join('');
-			} else { nDiv.innerHTML = '<div class="text-center italic text-slate-400 py-2">Bersih, tidak ada catatan.</div>'; }
-		} else { closeProfile(); Swal.fire('Gagal', 'Data siswa tidak ditemukan', 'error'); }
-	}
+        // 5. OVERRIDE Save Jurnal
+        async function saveJurnal() {
+            const editId = document.getElementById('editJurnalId').value;
+            const p = {
+                id: editId,
+                date: document.getElementById('jurDate').value,
+                kelas: document.getElementById('jurKelas').value,
+                jam: document.getElementById('jurJam').value,
+                materi: document.getElementById('jurMateri').value,
+                metode: document.getElementById('jurMetode').value,
+                tindak: document.getElementById('jurTindak').value,
+                catatan: document.getElementById('jurCatatan').value,
+                s_total: document.getElementById('jurStatTotal').innerText,
+                s_hadir: document.getElementById('jurStatHadir').innerText,
+                s_absen: document.getElementById('jurStatAbsen').innerText,
+                guru: currentUser.nama, 
+                mapel: currentUser.mapel
+            };
+            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Data Belum Lengkap', 'Mohon lengkapi Kelas, Jam, dan Materi Pokok.', 'warning');
+            let action = editId !== "" ? 'updateJurnal' : 'saveJurnal';
+            const r = await apiCall(action, p);
+            if(r.status === 'success') {
+                Swal.fire({ icon:'success', title: editId ? 'Jurnal Diperbarui' : 'Jurnal Tersimpan', showConfirmButton:false, timer:1500 });
+                if(editId) { cancelEditJurnal(); } 
+                else {
+                    document.getElementById('jurMateri').value = ''; 
+                    document.getElementById('jurCatatan').value = '';
+                    document.getElementById('jurJam').value = '';
+                    document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+                }
+            } else { Swal.fire('Gagal', r.message, 'error'); }
+         }
+        // --- FITUR PROFIL 360 ---
+        async function viewProfile(nisn) {
+            const modal = document.getElementById('modalProfile');
+            modal.classList.remove('hidden');
+            document.getElementById('profName').innerText = "Memuat Data...";
+            document.getElementById('profKelas').innerText = "Mohon Tunggu...";
+            document.getElementById('profImg').src = "https://api.dicebear.com/9.x/micah/svg?seed=loading";
+            const r = await apiCall('getStudentProfile', { nisn: nisn });
+            if(r.status === 'success') {
+                const i = r.info;
+                document.getElementById('profName').innerText = i.nama;
+                document.getElementById('profKelas').innerText = `${i.kelas} • ${i.nisn}`;
+                document.getElementById('profImg').src = `https://api.dicebear.com/9.x/micah/svg?seed=${i.nama}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+                document.getElementById('p-h').innerText = r.abs.h;
+                document.getElementById('p-s').innerText = r.abs.s;
+                document.getElementById('p-i').innerText = r.abs.i;
+                document.getElementById('p-a').innerText = r.abs.a;
+                document.getElementById('p-avg').innerText = r.avg || '-';
+                const nDiv = document.getElementById('profNotes');
+                if(r.notes.length > 0) {
+                    nDiv.innerHTML = r.notes.map(n => 
+                        `<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border-l-4 ${n.ket.includes('Prestasi')?'border-emerald-500':'border-red-500'}">
+                            <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300"><span>${n.ket}</span><span class="text-[10px] opacity-50">${n.tgl}</span></div>
+                            <p class="mt-1 text-slate-500 truncate">${n.uraian}</p>
+                    </div>`
+                ).join('');
+            } else { nDiv.innerHTML = '<div class="text-center italic text-slate-400 py-2">Bersih, tidak ada catatan.</div>'; }
+        } else { closeProfile(); Swal.fire('Gagal', 'Data siswa tidak ditemukan', 'error'); }
+    }
 
-	function closeProfile() { document.getElementById('modalProfile').classList.add('hidden'); }
-		
-		// --- FITUR EXPORT EXCEL ---
-		function exportToExcel() {
-			if(!globalReportData || !globalReportData.data || globalReportData.data.length === 0) {
-				return Swal.fire('Data Kosong', 'Silakan klik PREVIEW terlebih dahulu.', 'warning');
-        }
-        const d = globalReportData;
-        let content = "";
-        let filename = "";
-        if(d.type === 'absen') {
-            filename = `Laporan_Absensi_${d.k}.xls`;
-            content += `<table border="1"><thead><tr style="background-color:#4f46e5;color:white;"><th>No</th><th>Nama Siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th>Total</th></tr></thead><tbody>`;
-            d.data.forEach((r, i) => {
-                let total = r.h + r.s + r.i + r.a;
-                content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.h}</td><td>${r.s}</td><td>${r.i}</td><td style="color:red;font-weight:bold;">${r.a}</td><td>${total}</td></tr>`;
-            });
-        } 
-        else if (d.type === 'nilai') {
-            filename = `Leger_Nilai_${d.mapel}_${d.k}.xls`;
-            if(d.mode === 'rapor') {
-                const students = processRaporData(d.data);
-                content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Nama Siswa</th><th>Tugas</th><th>Praktek</th><th>UH</th><th>UTS</th><th>UAS</th><th>NA</th></tr></thead><tbody>`;
-                students.forEach((r, i) => {
-                    content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.rt}</td><td>${r.rp}</td><td>${r.ruh}</td><td>${r.uts}</td><td>${r.uas}</td><td style="font-weight:bold;">${r.na}</td></tr>`;
-                });
-            } else {
-               content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Topik</th><th>Nilai</th></tr></thead><tbody>`;
-               d.data.forEach((r, i) => {
-                   content += `<tr><td>${i+1}</td><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.nama}</td><td>${r.jenis}</td><td>${r.topik}</td><td>${r.nilai}</td></tr>`;
-               });
-            }
-        }
-        content += `</tbody></table>`;
-        const uri = 'data:application/vnd.ms-excel;base64,';
-        const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head></head><body>' + content + '</body></html>';
-        const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
-        const link = document.createElement("a");
-        link.href = uri + base64(template);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-		// --- FITUR PENGUMUMAN ---
-		async function loadAnnouncements() {
-			const r = await apiCall('getAnnouncements');
-			const box = document.getElementById('annoBox');
-			if (r.status === 'success' && r.data.judul) {
-				box.classList.remove('hidden');
-				document.getElementById('annoDate').innerText = r.data.tgl;
-				document.getElementById('annoTitle').innerText = r.data.judul;
-				document.getElementById('annoBody').innerText = r.data.isi;
-				if(r.data.tipe && r.data.tipe.toLowerCase().includes('penting')) {
-					document.getElementById('annoType').classList.remove('hidden');
-					box.classList.remove('from-amber-100', 'to-orange-100'); 
-					box.classList.add('from-red-50', 'to-rose-50', 'border-red-500');
-				}
-			} else { box.classList.add('hidden'); }
-		}
-		function closeAnno() { document.getElementById('annoBox').classList.add('hidden'); }
+    function closeProfile() { document.getElementById('modalProfile').classList.add('hidden'); }
+    function toggleQR() {
+        const qrDiv = document.getElementById('qrContainer');
+        const img = document.getElementById('profImg');
+        const nisn = document.getElementById('profKelas').innerText.split('•')[1]?.trim();
+        
+        if (qrDiv.classList.contains('hidden')) {
+            if(!nisn) return;
+            qrDiv.innerHTML = '';
+            new QRCode(qrDiv, { text: nisn, width: 80, height: 80 });
+            qrDiv.classList.remove('hidden');
+            img.classList.add('opacity-10');
+        } else {
+            qrDiv.classList.add('hidden');
+            img.classList.remove('opacity-10');
+        }
+    }
+        
+        // --- FITUR EXPORT EXCEL ---
+        function exportToExcel() {
+            if(!globalReportData || !globalReportData.data || globalReportData.data.length === 0) {
+                return Swal.fire('Data Kosong', 'Silakan klik PREVIEW terlebih dahulu.', 'warning');
+        }
+        const d = globalReportData;
+        let content = "";
+        let filename = "";
+        if(d.type === 'absen') {
+            filename = `Laporan_Absensi_${d.k}.xls`;
+            content += `<table border="1"><thead><tr style="background-color:#4f46e5;color:white;"><th>No</th><th>Nama Siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th>Total</th></tr></thead><tbody>`;
+            d.data.forEach((r, i) => {
+                let total = r.h + r.s + r.i + r.a;
+                content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.h}</td><td>${r.s}</td><td>${r.i}</td><td style="color:red;font-weight:bold;">${r.a}</td><td>${total}</td></tr>`;
+            });
+        } 
+        else if (d.type === 'nilai') {
+            filename = `Leger_Nilai_${d.mapel}_${d.k}.xls`;
+            if(d.mode === 'rapor') {
+                const students = processRaporData(d.data);
+                content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Nama Siswa</th><th>Tugas</th><th>Praktek</th><th>UH</th><th>UTS</th><th>UAS</th><th>NA</th></tr></thead><tbody>`;
+                students.forEach((r, i) => {
+                    content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.rt}</td><td>${r.rp}</td><td>${r.ruh}</td><td>${r.uts}</td><td>${r.uas}</td><td style="font-weight:bold;">${r.na}</td></tr>`;
+                });
+            } else {
+               content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Topik</th><th>Nilai</th></tr></thead><tbody>`;
+               d.data.forEach((r, i) => {
+                   content += `<tr><td>${i+1}</td><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.nama}</td><td>${r.jenis}</td><td>${r.topik}</td><td>${r.nilai}</td></tr>`;
+               });
+            }
+        }
+        content += `</tbody></table>`;
+        const uri = 'data:application/vnd.ms-excel;base64,';
+        const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head></head><body>' + content + '</body></html>';
+        const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
+        const link = document.createElement("a");
+        link.href = uri + base64(template);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+        // --- FITUR PENGUMUMAN ---
+        async function loadAnnouncements() {
+            const r = await apiCall('getAnnouncements');
+            const box = document.getElementById('annoBox');
+            if (r.status === 'success' && r.data.judul) {
+                box.classList.remove('hidden');
+                document.getElementById('annoDate').innerText = r.data.tgl;
+                document.getElementById('annoTitle').innerText = r.data.judul;
+                document.getElementById('annoBody').innerText = r.data.isi;
+                if(r.data.tipe && r.data.tipe.toLowerCase().includes('penting')) {
+                    document.getElementById('annoType').classList.remove('hidden');
+                    box.classList.remove('from-amber-100', 'to-orange-100'); 
+                    box.classList.add('from-red-50', 'to-rose-50', 'border-red-500');
+                }
+            } else { box.classList.add('hidden'); }
+        }
+        function closeAnno() { document.getElementById('annoBox').classList.add('hidden'); }
 
-		// --- VISUAL EFFECTS ---
-		function getSkeletonLoading(jumlah) {
-			let html = '';
-			for(let i=0; i<jumlah; i++) {
-				html += `
-				<div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-3 animate-pulse">
-					<div class="flex justify-between items-center mb-4">
-						<div class="space-y-2">
-							<div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-40"></div>
-							<div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
-						</div>
-						<div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-					</div>
-					<div class="grid grid-cols-4 gap-2 mb-4">
-						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-						<div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-					</div>
-					<div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl w-full"></div>
-				</div>`;
-			}
-			return html;
-	}
-		function rayakanSukses() {
-			var count = 200; var defaults = { origin: { y: 0.7 } };
-			function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
-			fire(0.25, { spread: 26, startVelocity: 55, }); fire(0.2, { spread: 60, }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 }); fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 }); fire(0.1, { spread: 120, startVelocity: 45, });
-	}
-    </script>
+        // --- NEW: AUTO SAVE DRAFT ---
+        function initAutoSave() {
+            ['jurMateri','jurMetode','jurTindak','jurCatatan','catUraian','catTindak'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.addEventListener('input', () => saveDraft(id, el.value));
+                    loadDraft(id, el);
+                }
+            });
+        }
+        function saveDraft(key, val) { localStorage.setItem('draft_'+key, val); }
+        function loadDraft(key, el) { const v = localStorage.getItem('draft_'+key); if(v) el.value = v; }
+        function clearDrafts() { 
+            ['jurMateri','jurMetode','jurTindak','jurCatatan','catUraian','catTindak'].forEach(id => localStorage.removeItem('draft_'+id));
+        }
+
+        // --- VISUAL EFFECTS ---
+        function getSkeletonLoading(jumlah) {
+            let html = '';
+            for(let i=0; i<jumlah; i++) {
+                html += `
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-3 animate-pulse">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="space-y-2">
+                            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-40"></div>
+                            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+                        </div>
+                        <div class="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 mb-4">
+                        <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                        <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                    </div>
+                    <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl w-full"></div>
+                </div>`;
+            }
+            return html;
+    }
+        function rayakanSukses() {
+            var count = 200; var defaults = { origin: { y: 0.7 } };
+            function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
+            fire(0.25, { spread: 26, startVelocity: 55, }); fire(0.2, { spread: 60, }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 }); fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 }); fire(0.1, { spread: 120, startVelocity: 45, });
+    }
+    </script>
 </body>
 </html>
