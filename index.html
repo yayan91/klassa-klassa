@@ -164,9 +164,17 @@
 						</div>
 					</div>
 				</div>
-                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex sticky top-0 z-20">
+                    <div class="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-2 sticky top-0 z-20">
                         <button onclick="switchDashContent('absen')" id="btnDashAbsen" class="flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-pie"></i> MONITORING ABSENSI</button>
                         <button onclick="switchDashContent('nilai')" id="btnDashNilai" class="flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2"><i class="fa-solid fa-chart-line"></i> MONITORING NILAI</button>
+                        
+                        <!-- FILTER DASHBOARD BARU (V41) -->
+                        <div class="bg-indigo-50 dark:bg-slate-800 rounded-xl px-3 py-1 flex items-center gap-2 border border-indigo-100 dark:border-slate-700">
+                            <i class="fa-solid fa-filter text-indigo-500"></i>
+                            <select id="dashFilterKelas" onchange="refreshDashboard()" class="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer">
+                                <option value="all">Semua Kelas</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div id="dash-absen" class="space-y-8 animate-fade-in">
@@ -588,16 +596,50 @@
             const r=await apiCall('getClasses'); 
             if(r.status==='success'){
                 let o='<option value="">- Pilih -</option>';
-                r.data.forEach(c=>o+=`<option value="${c}">${c}</option>`); 
+                let oFilter='<option value="all">Semua Kelas</option>'; // Untuk Dashboard Filter
+
+                r.data.forEach(c=>{
+                    o+=`<option value="${c}">${c}</option>`;
+                    oFilter+=`<option value="${c}">${c}</option>`;
+                }); 
+                
+                // Populate Selects
                 ['inputKelas','rekapKelas','pubKelas','nilaiKelas','rekapNilaiKelas','jurKelas','catKelas','histCatKelas'].forEach(id => {
                     const el = document.getElementById(id); if(el) el.innerHTML=o;
                 });
+
+                // Populate Dashboard Filter
+                const df = document.getElementById('dashFilterKelas');
+                if(df) df.innerHTML = oFilter;
             }
         }
         async function loadSchoolInfo(){const r=await apiCall('getSchoolInfo'); if(r.status==='success')schoolInfo=r.data;}
 
-        // --- DASHBOARD LOGIC ---
-        async function loadDashboardStats(){const r=await apiCall('getDashboardStats'); loadAnnouncements(); if(r.status==='success'){dashboardData=r; switchDashView('today'); renderTopAlpa(r.topAlpa);}}
+        // --- DASHBOARD LOGIC (DENGAN FILTER) ---
+        
+        // Fungsi Wrapper untuk Auto Refresh saat ganti filter
+        function refreshDashboard() {
+            const btnAbsen = document.getElementById('btnDashAbsen');
+            // Cek mana yang aktif berdasarkan style classnya (Agak tricky tapi works)
+            if(btnAbsen.classList.contains('bg-indigo-600')) {
+                 loadDashboardStats();
+            } else {
+                 loadDashboardNilai();
+            }
+        }
+
+        async function loadDashboardStats(){
+            const selectedClass = document.getElementById('dashFilterKelas').value;
+            const r=await apiCall('getDashboardStats', {kelas: selectedClass}); // Kirim param kelas
+
+            loadAnnouncements(); 
+            if(r.status==='success'){
+                dashboardData=r; 
+                switchDashView('today'); 
+                renderTopAlpa(r.topAlpa);
+            }
+        }
+
         function switchDashView(v){
             const d=v==='today'?dashboardData.today:dashboardData.total;
             const c=v==='today'?dashboardData.chartToday:dashboardData.chartTotal;
@@ -622,6 +664,7 @@
                 btnAbsen.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
                 btnNilai.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
                 dashAbsen.classList.remove('hidden'); dashNilai.classList.add('hidden');
+                loadDashboardStats(); // Refresh Absen saat tab dibuka
             } else {
                 btnNilai.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
                 btnAbsen.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
@@ -630,7 +673,9 @@
             }
         }
         async function loadDashboardNilai() {
-            const r = await apiCall('getDashboardNilai', {mapel: currentUser.mapel, guru: currentUser.nama});
+            const selectedClass = document.getElementById('dashFilterKelas').value;
+            const r = await apiCall('getDashboardNilai', {mapel: currentUser.mapel, guru: currentUser.nama, kelas: selectedClass});
+            
             if(r.status === 'success') {
                 document.getElementById('dnAvg').innerText = r.summary.avg;
                 document.getElementById('dnHigh').innerText = r.summary.high.na; document.getElementById('dnHighName').innerText = `${r.summary.high.nama} (${r.summary.high.kelas})`;
@@ -761,7 +806,6 @@
             const r = await apiCall('getJurnalHistory', {guru: currentUser.nama, mapel: currentUser.mapel});
             if(r.status === 'success' && r.data.length > 0) {
                 globalJurnalHistory = r.data;
-                // [UPDATED] Add Edit & Delete buttons
                 l.innerHTML = r.data.map((j, idx) => `<tr class="border-b dark:border-slate-800"><td class="p-3 font-mono">${new Date(j.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold">${j.kelas}</td><td class="p-3"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold">${j.jam}</span></td><td class="p-3 text-slate-600 dark:text-slate-300 truncate max-w-[150px]">${j.materi}</td><td class="p-3 text-center"><span class="text-xs text-slate-400">${j.hadir}/${parseInt(j.hadir)+parseInt(j.absen)}</span></td>
                 <td class="p-3 text-center flex gap-1 justify-center">
                     <button onclick="printSingleJurnal(${idx})" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-indigo-100 text-indigo-600 transition flex items-center justify-center"><i class="fa-solid fa-print"></i></button>
@@ -989,512 +1033,446 @@
         }
 
         // --- REPORT LOGIC (SHARED) ---
-        function showRekapType(t){
-            currentReportType = t;
-            const a = document.getElementById('sw-absen'); const b = document.getElementById('sw-nilai');
-            const pa = document.getElementById('panel-rekap-absen'); const pn = document.getElementById('panel-rekap-nilai');
-            if(t==='absen'){
-                a.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
-                b.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
-                pa.classList.remove('hidden'); pn.classList.add('hidden');
-            } else {
-                b.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-amber-500 text-white shadow transition flex items-center justify-center gap-2";
-                a.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
-                pn.classList.remove('hidden'); pa.classList.add('hidden');
-            }
-            document.getElementById('rekapPreviewBox').classList.add('hidden'); 
-        }
-        function setRekapMode(m){document.getElementById('rekapMode').value=m; document.getElementById('btnModeKelas').className=m==='kelas'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('btnModeSiswa').className=m==='siswa'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('rekapSiswa').classList.toggle('hidden',m!=='siswa');}
-        function setNilaiMode(m){
-            document.getElementById('nilaiMode').value=m; 
-            document.getElementById('btnNilaiRapor').className=m==='rapor'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; 
-            document.getElementById('btnNilaiDetail').className=m==='detail'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
-            document.getElementById('btnNilaiSiswa').className=m==='siswa'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
-            document.getElementById('filterNilaiJenis').classList.toggle('hidden', m !== 'detail');
-            document.getElementById('filterNilaiSiswa').classList.toggle('hidden', m !== 'siswa');
-        }
-        async function loadSiswaForFilter(){const k=document.getElementById('rekapKelas').value;if(!k||document.getElementById('rekapMode').value!=='siswa')return;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('rekapSiswa').innerHTML=o;}}
-        async function loadSiswaForNilai(){const k=document.getElementById('rekapNilaiKelas').value;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih Siswa -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('filterNilaiSiswa').innerHTML=o;}}
-        async function fetchReportData(){
-            const m=document.getElementById('rekapMode').value, k=document.getElementById('rekapKelas').value, s1=document.getElementById('rekapStart').value, s2=document.getElementById('rekapEnd').value;
-            let fid=k; if(!k){Swal.fire('Pilih Kelas','','warning');return;} if(m==='siswa'){fid=document.getElementById('rekapSiswa').value; if(!fid){Swal.fire('Pilih Siswa','','warning');return;}}
-            const r=await apiCall('getTeacherRecap',{mode:m,filterId:fid,startDate:s1,endDate:s2});
-            if(r.status==='success'&&r.data.length){globalReportData = {data:r.data, mode:m, k:k, s1:s1, s2:s2, fid:fid, type: 'absen'}; currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');} else Swal.fire('Data Kosong','','info');
-        }
-        async function fetchNilaiReport() {
-            const k = document.getElementById('rekapNilaiKelas').value; const m = document.getElementById('nilaiMode').value;
-            if(!k) return Swal.fire('Pilih Kelas', '', 'warning');
-            const r = await apiCall('getNilaiRecap', {kelas: k, mapel: currentUser.mapel, guru: currentUser.nama, type: 'detail'});
-            if(r.status === 'success' && r.data.length > 0) {
-                globalReportData = {data: r.data, mode: m, k: k, mapel: currentUser.mapel, type: 'nilai'};
-                currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');
-            } else Swal.fire('Data Nilai Kosong', '', 'info');
-        }
-        function changeReportRows(v){ 
-             reportRows = v==='all'? globalReportData.data.length : parseInt(v); 
-             currentReportPage=1; 
-             renderReportTable(); 
-        }
-        function renderReportTable(){
-            let d = globalReportData;
-            const th=document.getElementById('previewThead'), tb=document.getElementById('previewTbody'); tb.innerHTML='';
-            if(d.type === 'absen') {
-                const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=d.data.slice(start,end);
-                if(d.mode==='kelas'){
-                    document.getElementById('previewMeta').innerText = `ABSENSI KELAS: ${d.k}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Nama</th><th class="p-3 text-center">H</th><th class="p-3 text-center">S</th><th class="p-3 text-center">I</th><th class="p-3 text-center">A</th></tr>`;
-                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center text-green-600 font-bold bg-green-50 dark:bg-green-900/30 rounded-lg">${r.h}</td><td class="p-3 text-center text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 rounded-lg">${r.s}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50 dark:bg-blue-900/30 rounded-lg">${r.i}</td><td class="p-3 text-center text-red-600 font-bold bg-red-50 dark:bg-red-900/30 rounded-lg">${r.a}</td></tr>`);
-                } else {
-                    const sn=document.getElementById('rekapSiswa'); document.getElementById('previewMeta').innerText = `ABSENSI SISWA: ${sn.options[sn.selectedIndex].text}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Tanggal</th><th class="p-3">Status</th><th class="p-3">Ket</th></tr>`;
-                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-mono text-slate-600 dark:text-slate-400">${new Date(r.dateRaw).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-800 dark:text-slate-200">${r.status}</td><td class="p-3 italic text-slate-400">${r.keterangan||'-'}</td></tr>`);
-                }
-                document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(d.data.length/reportRows)}`;
-            } else {
-                if(d.mode === 'rapor') {
-                    let students = processRaporData(d.data);
-                    document.getElementById('previewMeta').innerText = `NILAI (${d.mapel}) - RAPOR`;
-                    th.innerHTML=`<tr><th class="p-3">Nama</th><th class="p-3 text-center">Tugas</th><th class="p-3 text-center">Praktek</th><th class="p-3 text-center">UH</th><th class="p-3 text-center">UTS</th><th class="p-3 text-center">UAS</th><th class="p-3 text-center">NA</th></tr>`;
-                    const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=students.slice(start,end);
-                    pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center">${r.rt}</td><td class="p-3 text-center">${r.rp}</td><td class="p-3 text-center">${r.ruh}</td><td class="p-3 text-center">${r.uts}</td><td class="p-3 text-center">${r.uas}</td><td class="p-3 text-center font-extrabold text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">${r.na}</td></tr>`);
-                    document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(students.length/reportRows)}`;
-                } else if (d.mode === 'detail') {
-                    const filter = document.getElementById('filterNilaiJenis').value; let filteredData = d.data;
-                    if(filter !== 'all') filteredData = d.data.filter(r => r.jenis === filter);
-                    if(filter === 'all') {
-                        document.getElementById('previewMeta').innerText = `LOG NILAI (${d.mapel}) - SEMUA`;
-                        th.innerHTML=`<tr><th class="p-3">Tgl</th><th class="p-3">Nama</th><th class="p-3">Jenis</th><th class="p-3">Topik</th><th class="p-3">Nilai</th><th class="p-3 text-center">Aksi</th></tr>`;
-                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=filteredData.slice(start,end);
-                        pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-xs font-mono text-slate-500">${new Date(r.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-xs uppercase font-bold text-slate-500">${r.jenis}</td><td class="p-3 italic text-slate-500">${r.topik}</td><td class="p-3 font-bold text-slate-800 dark:text-white">${r.nilai}</td><td class="p-3">${getActionButtonsNilai(r.idUnik, r.nilai)}</td></tr>`);
-                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(filteredData.length/reportRows)}`;
-                    } else {
-                        document.getElementById('previewMeta').innerText = `MATRIX NILAI: ${filter.toUpperCase()}`;
-                        const matrix = processMatrixData(filteredData);
-                        let headerHTML = `<tr><th class="p-3">Nama</th>`;
-                        for(let i=1; i<=matrix.maxCols; i++) headerHTML += `<th class="p-3 text-center">${i}</th>`;
-                        headerHTML += `<th class="p-3 text-center">Rata2</th></tr>`;
-                        th.innerHTML = headerHTML;
-                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=matrix.data.slice(start,end);
-                        pd.forEach(r => {
-                            let rowHTML = `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td>`;
-                            for(let i=0; i<matrix.maxCols; i++) { rowHTML += `<td class="p-3 text-center text-slate-600 dark:text-slate-400">${r.scores[i] || '-'}</td>`; }
-                            rowHTML += `<td class="p-3 text-center font-bold text-amber-600">${r.avg}</td></tr>`;
-                            tb.innerHTML += rowHTML;
-                        });
-                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(matrix.data.length/reportRows)}`;
-                    }
-                } else if (d.mode === 'siswa') {
-                    const nisn = document.getElementById('filterNilaiSiswa').value; const sn = document.getElementById('filterNilaiSiswa'); const studentName = sn.options[sn.selectedIndex].text;
-                    document.getElementById('previewMeta').innerText = `PORTOFOLIO: ${studentName}`;
-                    if(!nisn) { tb.innerHTML = '<tr><td class="p-4 text-center">Pilih Siswa dulu</td></tr>'; return; }
-                    const pData = d.data.filter(r => String(r.nisn) === String(nisn)); th.innerHTML = ''; 
-                    let html = `<tr><td class="p-0">`;
-                    const cats = ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'];
-                    cats.forEach(cat => {
-                        const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
-                        if(items.length > 0) {
-                             html += `<div class="mb-4"><h4 class="font-bold text-xs uppercase bg-slate-100 dark:bg-slate-800 p-2 mb-1 text-slate-600 dark:text-slate-300">${cat}</h4><table class="w-full text-xs">`;
-                             items.forEach(x => { html += `<tr class="border-b border-slate-50 dark:border-slate-800"><td class="py-1 px-2 text-slate-500">${x.topik}</td><td class="py-1 px-2 font-bold text-right text-slate-700 dark:text-white">${x.nilai}</td></tr>`; });
-                             const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length);
-                             html += `<tr class="bg-amber-50 dark:bg-amber-900/10"><td class="py-1 px-2 font-bold text-amber-700">RATA-RATA</td><td class="py-1 px-2 font-bold text-right text-amber-700">${avg}</td></tr></table></div>`;
-                        }
-                    });
-                    html += `</td></tr>`; tb.innerHTML = html; document.getElementById('reportPageInfo').innerText = `1/1`;
-                }
-            }
-        }
-        function processRaporData(rawData) {
-            let students = {};
-            rawData.forEach(r => {
-                if(!students[r.nisn]) students[r.nisn] = { nisn: r.nisn, nama: r.nama, tugas:[], praktek:[], uh:[], uts:[], uas:[] };
-                let j = r.jenis.toLowerCase();
-                if(j.includes('tugas')) students[r.nisn].tugas.push(r.nilai);
-                else if(j.includes('praktek')) students[r.nisn].praktek.push(r.nilai);
-                else if(j.includes('uh') || j.includes('harian')) students[r.nisn].uh.push(r.nilai);
-                else if(j.includes('uts')) students[r.nisn].uts.push(r.nilai);
-                else if(j.includes('uas')) students[r.nisn].uas.push(r.nilai);
-            });
-            let final = [];
-            const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
-            Object.values(students).forEach(s => {
-                let rT = avg(s.tugas), rP = avg(s.praktek), rUH = avg(s.uh), rUTS = avg(s.uts), rUAS = avg(s.uas);
-                let div=0, tot=0; if(rT>0){tot+=rT;div++;} if(rP>0){tot+=rP;div++;} if(rUH>0){tot+=rUH;div++;} if(rUTS>0){tot+=rUTS;div++;} if(rUAS>0){tot+=rUAS;div++;}
-                final.push({nama:s.nama, rt:rT||'-', rp:rP||'-', ruh:rUH||'-', uts:rUTS||'-', uas:rUAS||'-', na:div>0?Math.round(tot/div):'-'});
-            });
-            return final.sort((a,b)=>a.nama.localeCompare(b.nama));
-        }
-        function processMatrixData(rawData) {
-            let grouped = {}; let maxLen = 0;
-            rawData.forEach(r => {
-                if(!grouped[r.nisn]) grouped[r.nisn] = { nama: r.nama, scores: [] };
-                grouped[r.nisn].scores.push(r.nilai);
-                if(grouped[r.nisn].scores.length > maxLen) maxLen = grouped[r.nisn].scores.length;
-            });
-            let final = Object.values(grouped).map(g => {
-                const avg = g.scores.length ? Math.round(g.scores.reduce((a,b)=>a+b,0)/g.scores.length) : 0;
-                return { nama: g.nama, scores: g.scores, avg: avg };
-            });
-            return { data: final.sort((a,b)=>a.nama.localeCompare(b.nama)), maxCols: maxLen };
-        }
-        function prevReportPage(){if(currentReportPage>1){currentReportPage--;renderReportTable();}}
-        function nextReportPage(){currentReportPage++; renderReportTable();}
-        
-        async function generateNativePDF(){
-             if(!globalReportData || !globalReportData.data || globalReportData.data.length===0) { await fetchReportData(); if(!globalReportData.data) return; }
-            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(67, 56, 202); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(67, 56, 202); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
-            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN ABSENSI", 105, 35, {align:'center'});
-            let tH=0, tS=0, tI=0, tA=0; if(d.mode==='kelas') d.data.forEach(r=>{tH+=r.h;tS+=r.s;tI+=r.i;tA+=r.a}); else d.data.forEach(r=>{if(r.status==='Hadir')tH++;if(r.status==='Sakit')tS++;if(r.status==='Izin')tI++;if(r.status==='Alpa')tA++;});
-            doc.setFillColor(248, 250, 252); doc.roundedRect(15, 40, 180, 20, 3, 3, 'F'); doc.setFontSize(10); doc.setTextColor(100); doc.text(`Total Hadir: ${tH}`, 25, 52); doc.text(`Total Sakit: ${tS}`, 65, 52); doc.text(`Total Izin: ${tI}`, 105, 52); doc.setTextColor(220, 38, 38); doc.text(`Total Alpa: ${tA}`, 145, 52); doc.setTextColor(0);
-            doc.text(`Kelas: ${d.k}`, 15, 70); if(d.mode==='siswa') { const sn=document.getElementById('rekapSiswa'); doc.text(`Nama: ${sn.options[sn.selectedIndex].text}`, 15, 75); } doc.text(`Periode: ${new Date(d.s1).toLocaleDateString('id-ID')} s/d ${new Date(d.s2).toLocaleDateString('id-ID')}`, 15, d.mode==='siswa'?80:75);
-            let body = []; if(d.mode==='kelas'){body = d.data.map((r,i)=>[i+1, r.nama, r.h, r.s, r.i, r.a]); doc.autoTable({startY: d.mode==='siswa'?85:80, head:[['No','Nama','H','S','I','A']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index > 1) {if (data.cell.raw > 0) data.cell.styles.fontStyle = 'bold'; if (data.column.index === 5 && data.cell.raw > 0) data.cell.styles.textColor = [220, 38, 38];}}});} else {body = d.data.map((r,i)=>[i+1, new Date(r.dateRaw).toLocaleDateString('id-ID'), r.status, r.keterangan||'-']); doc.autoTable({startY: 85, head:[['No','Tanggal','Status','Ket']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index === 2) {if(data.cell.raw==='Hadir') data.cell.styles.textColor = [22, 163, 74]; if(data.cell.raw==='Sakit') data.cell.styles.textColor = [217, 119, 6]; if(data.cell.raw==='Izin') data.cell.styles.textColor = [37, 99, 235]; if(data.cell.raw==='Alpa') { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; }}}});}
-            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
-            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${currentUser.mapel || 'Mata Pelajaran'},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
-            doc.save(`Laporan_Absen_${Date.now()}.pdf`);
-        }
+        function showRekapType(t){
+            currentReportType = t;
+            const a = document.getElementById('sw-absen'); const b = document.getElementById('sw-nilai');
+            const pa = document.getElementById('panel-rekap-absen'); const pn = document.getElementById('panel-rekap-nilai');
+            if(t==='absen'){
+                a.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow transition flex items-center justify-center gap-2";
+                b.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                pa.classList.remove('hidden'); pn.classList.add('hidden');
+            } else {
+                b.className = "flex-1 py-3 rounded-xl text-xs font-extrabold bg-amber-500 text-white shadow transition flex items-center justify-center gap-2";
+                a.className = "flex-1 py-3 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 transition flex items-center justify-center gap-2";
+                pn.classList.remove('hidden'); pa.classList.add('hidden');
+            }
+            document.getElementById('rekapPreviewBox').classList.add('hidden'); 
+        }
+        function setRekapMode(m){document.getElementById('rekapMode').value=m; document.getElementById('btnModeKelas').className=m==='kelas'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('btnModeSiswa').className=m==='siswa'?'flex-1 py-2 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 transition':'flex-1 py-2 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; document.getElementById('rekapSiswa').classList.toggle('hidden',m!=='siswa');}
+        function setNilaiMode(m){
+            document.getElementById('nilaiMode').value=m; 
+            document.getElementById('btnNilaiRapor').className=m==='rapor'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition'; 
+            document.getElementById('btnNilaiDetail').className=m==='detail'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('btnNilaiSiswa').className=m==='siswa'?'flex-1 py-2 text-[10px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 transition':'flex-1 py-2 text-[10px] font-bold rounded-md text-slate-500 dark:text-slate-400 hover:bg-white/50 transition';
+            document.getElementById('filterNilaiJenis').classList.toggle('hidden', m !== 'detail');
+            document.getElementById('filterNilaiSiswa').classList.toggle('hidden', m !== 'siswa');
+        }
+        async function loadSiswaForFilter(){const k=document.getElementById('rekapKelas').value;if(!k||document.getElementById('rekapMode').value!=='siswa')return;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('rekapSiswa').innerHTML=o;}}
+        async function loadSiswaForNilai(){const k=document.getElementById('rekapNilaiKelas').value;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih Siswa -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('filterNilaiSiswa').innerHTML=o;}}
+        async function fetchReportData(){
+            const m=document.getElementById('rekapMode').value, k=document.getElementById('rekapKelas').value, s1=document.getElementById('rekapStart').value, s2=document.getElementById('rekapEnd').value;
+            let fid=k; if(!k){Swal.fire('Pilih Kelas','','warning');return;} if(m==='siswa'){fid=document.getElementById('rekapSiswa').value; if(!fid){Swal.fire('Pilih Siswa','','warning');return;}}
+            const r=await apiCall('getTeacherRecap',{mode:m,filterId:fid,startDate:s1,endDate:s2});
+            if(r.status==='success'&&r.data.length){globalReportData = {data:r.data, mode:m, k:k, s1:s1, s2:s2, fid:fid, type: 'absen'}; currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');} else Swal.fire('Data Kosong','','info');
+        }
+        async function fetchNilaiReport() {
+            const k = document.getElementById('rekapNilaiKelas').value; const m = document.getElementById('nilaiMode').value;
+            if(!k) return Swal.fire('Pilih Kelas', '', 'warning');
+            const r = await apiCall('getNilaiRecap', {kelas: k, mapel: currentUser.mapel, guru: currentUser.nama, type: 'detail'});
+            if(r.status === 'success' && r.data.length > 0) {
+                globalReportData = {data: r.data, mode: m, k: k, mapel: currentUser.mapel, type: 'nilai'};
+                currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');
+            } else Swal.fire('Data Nilai Kosong', '', 'info');
+        }
+        function changeReportRows(v){ 
+             reportRows = v==='all'? globalReportData.data.length : parseInt(v); 
+             currentReportPage=1; 
+             renderReportTable(); 
+        }
+        function renderReportTable(){
+            let d = globalReportData;
+            const th=document.getElementById('previewThead'), tb=document.getElementById('previewTbody'); tb.innerHTML='';
+            if(d.type === 'absen') {
+                const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=d.data.slice(start,end);
+                if(d.mode==='kelas'){
+                    document.getElementById('previewMeta').innerText = `ABSENSI KELAS: ${d.k}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Nama</th><th class="p-3 text-center">H</th><th class="p-3 text-center">S</th><th class="p-3 text-center">I</th><th class="p-3 text-center">A</th></tr>`;
+                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center text-green-600 font-bold bg-green-50 dark:bg-green-900/30 rounded-lg">${r.h}</td><td class="p-3 text-center text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 rounded-lg">${r.s}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50 dark:bg-blue-900/30 rounded-lg">${r.i}</td><td class="p-3 text-center text-red-600 font-bold bg-red-50 dark:bg-red-900/30 rounded-lg">${r.a}</td></tr>`);
+                } else {
+                    const sn=document.getElementById('rekapSiswa'); document.getElementById('previewMeta').innerText = `ABSENSI SISWA: ${sn.options[sn.selectedIndex].text}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Tanggal</th><th class="p-3">Status</th><th class="p-3">Ket</th></tr>`;
+                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-mono text-slate-600 dark:text-slate-400">${new Date(r.dateRaw).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-800 dark:text-slate-200">${r.status}</td><td class="p-3 italic text-slate-400">${r.keterangan||'-'}</td></tr>`);
+                }
+                document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(d.data.length/reportRows)}`;
+            } else {
+                if(d.mode === 'rapor') {
+                    let students = processRaporData(d.data);
+                    document.getElementById('previewMeta').innerText = `NILAI (${d.mapel}) - RAPOR`;
+                    th.innerHTML=`<tr><th class="p-3">Nama</th><th class="p-3 text-center">Tugas</th><th class="p-3 text-center">Praktek</th><th class="p-3 text-center">UH</th><th class="p-3 text-center">UTS</th><th class="p-3 text-center">UAS</th><th class="p-3 text-center">NA</th></tr>`;
+                    const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=students.slice(start,end);
+                    pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center">${r.rt}</td><td class="p-3 text-center">${r.rp}</td><td class="p-3 text-center">${r.ruh}</td><td class="p-3 text-center">${r.uts}</td><td class="p-3 text-center">${r.uas}</td><td class="p-3 text-center font-extrabold text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">${r.na}</td></tr>`);
+                    document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(students.length/reportRows)}`;
+                } else if (d.mode === 'detail') {
+                    const filter = document.getElementById('filterNilaiJenis').value; let filteredData = d.data;
+                    if(filter !== 'all') filteredData = d.data.filter(r => r.jenis === filter);
+                    if(filter === 'all') {
+                        document.getElementById('previewMeta').innerText = `LOG NILAI (${d.mapel}) - SEMUA`;
+                        th.innerHTML=`<tr><th class="p-3">Tgl</th><th class="p-3">Nama</th><th class="p-3">Jenis</th><th class="p-3">Topik</th><th class="p-3">Nilai</th><th class="p-3 text-center">Aksi</th></tr>`;
+                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=filteredData.slice(start,end);
+                        pd.forEach(r => tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-xs font-mono text-slate-500">${new Date(r.date).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-xs uppercase font-bold text-slate-500">${r.jenis}</td><td class="p-3 italic text-slate-500">${r.topik}</td><td class="p-3 font-bold text-slate-800 dark:text-white">${r.nilai}</td><td class="p-3">${getActionButtonsNilai(r.idUnik, r.nilai)}</td></tr>`);
+                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(filteredData.length/reportRows)}`;
+                    } else {
+                        document.getElementById('previewMeta').innerText = `MATRIX NILAI: ${filter.toUpperCase()}`;
+                        const matrix = processMatrixData(filteredData);
+                        let headerHTML = `<tr><th class="p-3">Nama</th>`;
+                        for(let i=1; i<=matrix.maxCols; i++) headerHTML += `<th class="p-3 text-center">${i}</th>`;
+                        headerHTML += `<th class="p-3 text-center">Rata2</th></tr>`;
+                        th.innerHTML = headerHTML;
+                        const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=matrix.data.slice(start,end);
+                        pd.forEach(r => {
+                            let rowHTML = `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td>`;
+                            for(let i=0; i<matrix.maxCols; i++) { rowHTML += `<td class="p-3 text-center text-slate-600 dark:text-slate-400">${r.scores[i] || '-'}</td>`; }
+                            rowHTML += `<td class="p-3 text-center font-bold text-amber-600">${r.avg}</td></tr>`;
+                            tb.innerHTML += rowHTML;
+                        });
+                        document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(matrix.data.length/reportRows)}`;
+                    }
+                } else if (d.mode === 'siswa') {
+                    const nisn = document.getElementById('filterNilaiSiswa').value; const sn = document.getElementById('filterNilaiSiswa'); const studentName = sn.options[sn.selectedIndex].text;
+                    document.getElementById('previewMeta').innerText = `PORTOFOLIO: ${studentName}`;
+                    if(!nisn) { tb.innerHTML = '<tr><td class="p-4 text-center">Pilih Siswa dulu</td></tr>'; return; }
+                    const pData = d.data.filter(r => String(r.nisn) === String(nisn)); th.innerHTML = ''; 
+                    let html = `<tr><td class="p-0">`;
+                    const cats = ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'];
+                    cats.forEach(cat => {
+                        const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
+                        if(items.length > 0) {
+                             html += `<div class="mb-4"><h4 class="font-bold text-xs uppercase bg-slate-100 dark:bg-slate-800 p-2 mb-1 text-slate-600 dark:text-slate-300">${cat}</h4><table class="w-full text-xs">`;
+                             items.forEach(x => { html += `<tr class="border-b border-slate-50 dark:border-slate-800"><td class="py-1 px-2 text-slate-500">${x.topik}</td><td class="py-1 px-2 font-bold text-right text-slate-700 dark:text-white">${x.nilai}</td></tr>`; });
+                             const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length);
+                             html += `<tr class="bg-amber-50 dark:bg-amber-900/10"><td class="py-1 px-2 font-bold text-amber-700">RATA-RATA</td><td class="py-1 px-2 font-bold text-right text-amber-700">${avg}</td></tr></table></div>`;
+                        }
+                    });
+                    html += `</td></tr>`; tb.innerHTML = html; document.getElementById('reportPageInfo').innerText = `1/1`;
+                }
+            }
+        }
+        function processRaporData(rawData) {
+            let students = {};
+            rawData.forEach(r => {
+                if(!students[r.nisn]) students[r.nisn] = { nisn: r.nisn, nama: r.nama, tugas:[], praktek:[], uh:[], uts:[], uas:[] };
+                let j = r.jenis.toLowerCase();
+                if(j.includes('tugas')) students[r.nisn].tugas.push(r.nilai);
+                else if(j.includes('praktek')) students[r.nisn].praktek.push(r.nilai);
+                else if(j.includes('uh') || j.includes('harian')) students[r.nisn].uh.push(r.nilai);
+                else if(j.includes('uts')) students[r.nisn].uts.push(r.nilai);
+                else if(j.includes('uas')) students[r.nisn].uas.push(r.nilai);
+            });
+            let final = [];
+            const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+            Object.values(students).forEach(s => {
+                let rT = avg(s.tugas), rP = avg(s.praktek), rUH = avg(s.uh), rUTS = avg(s.uts), rUAS = avg(s.uas);
+                let div=0, tot=0; if(rT>0){tot+=rT;div++;} if(rP>0){tot+=rP;div++;} if(rUH>0){tot+=rUH;div++;} if(rUTS>0){tot+=rUTS;div++;} if(rUAS>0){tot+=rUAS;div++;}
+                final.push({nama:s.nama, rt:rT||'-', rp:rP||'-', ruh:rUH||'-', uts:rUTS||'-', uas:rUAS||'-', na:div>0?Math.round(tot/div):'-'});
+            });
+            return final.sort((a,b)=>a.nama.localeCompare(b.nama));
+        }
+        function processMatrixData(rawData) {
+            let grouped = {}; let maxLen = 0;
+            rawData.forEach(r => {
+                if(!grouped[r.nisn]) grouped[r.nisn] = { nama: r.nama, scores: [] };
+                grouped[r.nisn].scores.push(r.nilai);
+                if(grouped[r.nisn].scores.length > maxLen) maxLen = grouped[r.nisn].scores.length;
+            });
+            let final = Object.values(grouped).map(g => {
+                const avg = g.scores.length ? Math.round(g.scores.reduce((a,b)=>a+b,0)/g.scores.length) : 0;
+                return { nama: g.nama, scores: g.scores, avg: avg };
+            });
+            return { data: final.sort((a,b)=>a.nama.localeCompare(b.nama)), maxCols: maxLen };
+        }
+        function prevReportPage(){if(currentReportPage>1){currentReportPage--;renderReportTable();}}
+        function nextReportPage(){currentReportPage++; renderReportTable();}
+        
+        async function generateNativePDF(){
+             if(!globalReportData || !globalReportData.data || globalReportData.data.length===0) { await fetchReportData(); if(!globalReportData.data) return; }
+            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(67, 56, 202); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(67, 56, 202); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text("LAPORAN ABSENSI", 105, 35, {align:'center'});
+            let tH=0, tS=0, tI=0, tA=0; if(d.mode==='kelas') d.data.forEach(r=>{tH+=r.h;tS+=r.s;tI+=r.i;tA+=r.a}); else d.data.forEach(r=>{if(r.status==='Hadir')tH++;if(r.status==='Sakit')tS++;if(r.status==='Izin')tI++;if(r.status==='Alpa')tA++;});
+            doc.setFillColor(248, 250, 252); doc.roundedRect(15, 40, 180, 20, 3, 3, 'F'); doc.setFontSize(10); doc.setTextColor(100); doc.text(`Total Hadir: ${tH}`, 25, 52); doc.text(`Total Sakit: ${tS}`, 65, 52); doc.text(`Total Izin: ${tI}`, 105, 52); doc.setTextColor(220, 38, 38); doc.text(`Total Alpa: ${tA}`, 145, 52); doc.setTextColor(0);
+            doc.text(`Kelas: ${d.k}`, 15, 70); if(d.mode==='siswa') { const sn=document.getElementById('rekapSiswa'); doc.text(`Nama: ${sn.options[sn.selectedIndex].text}`, 15, 75); } doc.text(`Periode: ${new Date(d.s1).toLocaleDateString('id-ID')} s/d ${new Date(d.s2).toLocaleDateString('id-ID')}`, 15, d.mode==='siswa'?80:75);
+            let body = []; if(d.mode==='kelas'){body = d.data.map((r,i)=>[i+1, r.nama, r.h, r.s, r.i, r.a]); doc.autoTable({startY: d.mode==='siswa'?85:80, head:[['No','Nama','H','S','I','A']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index > 1) {if (data.cell.raw > 0) data.cell.styles.fontStyle = 'bold'; if (data.column.index === 5 && data.cell.raw > 0) data.cell.styles.textColor = [220, 38, 38];}}});} else {body = d.data.map((r,i)=>[i+1, new Date(r.dateRaw).toLocaleDateString('id-ID'), r.status, r.keterangan||'-']); doc.autoTable({startY: 85, head:[['No','Tanggal','Status','Ket']], body:body, theme:'striped',headStyles:{fillColor:[67, 56, 202]},didParseCell: function(data) {if (data.section === 'body' && data.column.index === 2) {if(data.cell.raw==='Hadir') data.cell.styles.textColor = [22, 163, 74]; if(data.cell.raw==='Sakit') data.cell.styles.textColor = [217, 119, 6]; if(data.cell.raw==='Izin') data.cell.styles.textColor = [37, 99, 235]; if(data.cell.raw==='Alpa') { data.cell.styles.textColor = [220, 38, 38]; data.cell.styles.fontStyle = 'bold'; }}}});}
+            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
+            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${currentUser.mapel || 'Mata Pelajaran'},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+            doc.save(`Laporan_Absen_${Date.now()}.pdf`);
+        }
 
-        async function generateNilaiPDF(){
-            if(!globalReportData || globalReportData.type !== 'nilai') { await fetchNilaiReport(); if(!globalReportData.data) return; }
-            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(245, 158, 11); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
-            let title = ""; let head=[], body=[]; let pdfData = d.data;
-            if(d.mode === 'rapor') {
-                title = `LEGER NILAI: ${d.mapel}`; let students = processRaporData(d.data);
-                head=[['No','Nama','Tugas','Praktek','UH','UTS','UAS','NA']]; body = students.map((r,i)=>[i+1, r.nama, r.rt, r.rp, r.ruh, r.uts, r.uas, r.na]);
-            } else if (d.mode === 'detail') {
-                 const filter = document.getElementById('filterNilaiJenis').value;
-                 if(filter === 'all') { title = `LOG NILAI (ALL): ${d.mapel}`; head=[['No','Tanggal','Nama','Jenis','Topik','Nilai']]; body = d.data.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.nama, r.jenis, r.topik, r.nilai]);
-                 } else { title = `DAFTAR NILAI: ${filter.toUpperCase()}`; pdfData = d.data.filter(r => r.jenis === filter); let matrix = processMatrixData(pdfData); let hRow = ['No', 'Nama']; for(let i=1; i<=matrix.maxCols; i++) hRow.push(`${i}`); hRow.push('Rata'); head=[hRow]; body = matrix.data.map((r,i) => { let row = [i+1, r.nama]; for(let j=0; j<matrix.maxCols; j++) row.push(r.scores[j]||'-'); row.push(r.avg); return row; }); }
-            } else if (d.mode === 'siswa') {
-                const sn = document.getElementById('filterNilaiSiswa'); title = `PORTOFOLIO: ${sn.options[sn.selectedIndex].text}`; const nisn = document.getElementById('filterNilaiSiswa').value; const pData = d.data.filter(r => String(r.nisn) === String(nisn));
-                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
-                let startY = 55; ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'].forEach(cat => {
-                    const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
-                    if(items.length > 0) {
-                        doc.setFont("helvetica", "bold"); doc.setTextColor(100); doc.text(cat, 15, startY);
-                        const subBody = items.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.topik, r.nilai]);
-                        const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length); subBody.push(['','','RATA-RATA', avg]);
-                        doc.autoTable({startY: startY+2, head:[['No','Tanggal','Topik','Nilai']], body:subBody, theme:'grid', didParseCell: function(data) { if(data.row.index === subBody.length-1) data.cell.styles.fontStyle='bold'; } }); startY = doc.lastAutoTable.finalY + 10;
-                    }
-                });
-                let fy = startY + 10; if(fy>250){doc.addPage();fy=20;}
-                const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
-                doc.save(`Portofolio_${title}_${Date.now()}.pdf`); return; 
-            }
-            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'});
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
-            doc.autoTable({startY: 55, head:head, body:body, theme:'striped',headStyles:{fillColor:[245, 158, 11]}});
-            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
-            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
-            doc.save(`Laporan_${title}_${Date.now()}.pdf`);
-        }
+        async function generateNilaiPDF(){
+            if(!globalReportData || globalReportData.type !== 'nilai') { await fetchNilaiReport(); if(!globalReportData.data) return; }
+            const d = globalReportData; const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(245, 158, 11); doc.text((schoolInfo.nama||'SEKOLAH').toUpperCase(), 105, 15, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(0,0,0); doc.text(schoolInfo.alamat||'-', 105, 20, {align:'center'}); doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.5); doc.line(15, 25, 195, 25);
+            let title = ""; let head=[], body=[]; let pdfData = d.data;
+            if(d.mode === 'rapor') {
+                title = `LEGER NILAI: ${d.mapel}`; let students = processRaporData(d.data);
+                head=[['No','Nama','Tugas','Praktek','UH','UTS','UAS','NA']]; body = students.map((r,i)=>[i+1, r.nama, r.rt, r.rp, r.ruh, r.uts, r.uas, r.na]);
+            } else if (d.mode === 'detail') {
+                 const filter = document.getElementById('filterNilaiJenis').value;
+                 if(filter === 'all') { title = `LOG NILAI (ALL): ${d.mapel}`; head=[['No','Tanggal','Nama','Jenis','Topik','Nilai']]; body = d.data.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.nama, r.jenis, r.topik, r.nilai]);
+                 } else { title = `DAFTAR NILAI: ${filter.toUpperCase()}`; pdfData = d.data.filter(r => r.jenis === filter); let matrix = processMatrixData(pdfData); let hRow = ['No', 'Nama']; for(let i=1; i<=matrix.maxCols; i++) hRow.push(`${i}`); hRow.push('Rata'); head=[hRow]; body = matrix.data.map((r,i) => { let row = [i+1, r.nama]; for(let j=0; j<matrix.maxCols; j++) row.push(r.scores[j]||'-'); row.push(r.avg); return row; }); }
+            } else if (d.mode === 'siswa') {
+                const sn = document.getElementById('filterNilaiSiswa'); title = `PORTOFOLIO: ${sn.options[sn.selectedIndex].text}`; const nisn = document.getElementById('filterNilaiSiswa').value; const pData = d.data.filter(r => String(r.nisn) === String(nisn));
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'}); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+                let startY = 55; ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'].forEach(cat => {
+                    const items = pData.filter(r => r.jenis === cat || (cat==='UH' && r.jenis.includes('Harian')));
+                    if(items.length > 0) {
+                        doc.setFont("helvetica", "bold"); doc.setTextColor(100); doc.text(cat, 15, startY);
+                        const subBody = items.map((r,i)=>[i+1, new Date(r.date).toLocaleDateString('id-ID'), r.topik, r.nilai]);
+                        const avg = Math.round(items.reduce((a,b)=>a+b.nilai,0)/items.length); subBody.push(['','','RATA-RATA', avg]);
+                        doc.autoTable({startY: startY+2, head:[['No','Tanggal','Topik','Nilai']], body:subBody, theme:'grid', didParseCell: function(data) { if(data.row.index === subBody.length-1) data.cell.styles.fontStyle='bold'; } }); startY = doc.lastAutoTable.finalY + 10;
+                    }
+                });
+                let fy = startY + 10; if(fy>250){doc.addPage();fy=20;}
+                const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+                doc.save(`Portofolio_${title}_${Date.now()}.pdf`); return; 
+            }
+            doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(title, 105, 35, {align:'center'});
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`Kelas: ${d.k}`, 15, 45); doc.text(`Mapel: ${d.mapel}`, 15, 50);
+            doc.autoTable({startY: 55, head:head, body:body, theme:'striped',headStyles:{fillColor:[245, 158, 11]}});
+            let fy = doc.lastAutoTable.finalY + 20; if(fy>250){doc.addPage();fy=20;}
+            const dt = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); doc.text(`Makassar, ${dt}`, 140, fy); doc.text(`Guru ${d.mapel},`, 140, fy+5); doc.setFont("helvetica", "bold"); doc.text(currentUser.nama, 140, fy+30); doc.setFont("helvetica", "normal"); doc.text(`NIP. ${currentUser.nip||'-'}`, 140, fy+35);
+            doc.save(`Laporan_${title}_${Date.now()}.pdf`);
+        }
 
-        function setPublicMode(m){document.getElementById('pubMode').value=m; document.getElementById('pubBtnKelas').className = m==='kelas' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubBtnSiswa').className = m==='siswa' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubSiswa').classList.toggle('hidden', m!=='siswa'); document.getElementById('pubList').innerHTML = ''; document.getElementById('pageInfo').innerText = '1/1';}
-        function togglePublic(s){document.getElementById('publicView').style.display = s ? 'flex' : 'none'; if(s) loadPublicClasses();}
-        async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
-        async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
-        function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
-        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = getSkeletonLoading(5); const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
-        function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
-        function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
-        function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
+        function setPublicMode(m){document.getElementById('pubMode').value=m; document.getElementById('pubBtnKelas').className = m==='kelas' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubBtnSiswa').className = m==='siswa' ? 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition' : 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition'; document.getElementById('pubSiswa').classList.toggle('hidden', m!=='siswa'); document.getElementById('pubList').innerHTML = ''; document.getElementById('pageInfo').innerText = '1/1';}
+        function togglePublic(s){document.getElementById('publicView').style.display = s ? 'flex' : 'none'; if(s) loadPublicClasses();}
+        async function loadPublicClasses(){const r = await apiCall('getClasses'); if(r.status === 'success'){let o = '<option value="">- Pilih Kelas -</option>'; r.data.forEach(c => o += `<option value="${c}">${c}</option>`); document.getElementById('pubKelas').innerHTML = o;}}
+        async function loadPublicStudents(){const k = document.getElementById('pubKelas').value; const m = document.getElementById('pubMode').value; if(!k || m !== 'siswa') return; const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'}); let o = '<option value="">- Pilih Nama Siswa -</option>'; if(r.status === 'success') r.data.forEach(s => o += `<option value="${s.nisn}">${s.nama}</option>`); document.getElementById('pubSiswa').innerHTML = o;}
+        function changePublicRows(v){ rowsPerPage = v === 'all' ? processedPublicData.length : parseInt(v); currentPage = 1; renderPublicTable(); }
+        async function fetchPublicData(){const l = document.getElementById('pubList'); l.innerHTML = getSkeletonLoading(5); const m = document.getElementById('pubMode').value; const k = document.getElementById('pubKelas').value; let fid = k; if(m === 'siswa'){ fid = document.getElementById('pubSiswa').value; if(!fid) { l.innerHTML=''; return Swal.fire('Pilih Siswa','','warning'); } } if(!k) { l.innerHTML=''; return Swal.fire('Pilih Kelas','','warning'); } const r = await apiCall('getPublicRecap', {startDate: document.getElementById('pubStart').value, endDate: document.getElementById('pubEnd').value, kelas: k, mode: m, filterId: fid}); if(r.status === 'success' && r.data.length > 0){globalPublicData = r.data; if(m === 'kelas') { let summaryMap = {}; globalPublicData.forEach(d => { let name = d.nama; if(!summaryMap[name]) summaryMap[name] = { nama: name, h:0, s:0, i:0, a:0 }; let st = d.status; if(st === 'Hadir') summaryMap[name].h++; else if(st === 'Sakit') summaryMap[name].s++; else if(st === 'Izin') summaryMap[name].i++; else if(st === 'Alpa') summaryMap[name].a++; }); processedPublicData = Object.values(summaryMap).sort((a,b) => a.nama.localeCompare(b.nama)); } else { processedPublicData = globalPublicData; } currentPage = 1; renderPublicTable(); } else { l.innerHTML = '<div class="text-center py-10 flex flex-col items-center"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i><span class="text-slate-400 text-sm font-bold">Data tidak ditemukan</span></div>'; }}
+        function renderPublicTable(){const l = document.getElementById('pubList'); l.innerHTML = ''; const m = document.getElementById('pubMode').value; const start = (currentPage - 1) * rowsPerPage; const end = start + rowsPerPage; const pg = processedPublicData.slice(start, end); if(processedPublicData.length === 0) return; if(m === 'kelas') { let tableHtml = `<div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800 border-b dark:border-slate-700"><tr><th class="px-4 py-3 font-extrabold">Nama Siswa</th><th class="px-2 py-3 text-center text-emerald-600">H</th><th class="px-2 py-3 text-center text-amber-600">S</th><th class="px-2 py-3 text-center text-blue-600">I</th><th class="px-2 py-3 text-center text-red-600">A</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">`; pg.forEach(d => { tableHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition"><td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">${d.nama}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.h}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.s}</td><td class="px-2 py-3 text-center font-bold text-slate-600 dark:text-slate-400">${d.i}</td><td class="px-2 py-3 text-center font-bold text-red-600 dark:text-red-400 ${d.a>0?'bg-red-50 dark:bg-red-900/20':''}">${d.a}</td></tr>`; }); tableHtml += `</tbody></table></div>`; l.innerHTML = tableHtml; } else { pg.forEach(d => { const dt = new Date(d.tanggal).toLocaleDateString('id-ID', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); const stColor = d.status==='Hadir'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : d.status==='Sakit'?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : d.status==='Izin'?'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; l.innerHTML += `<div class="bg-white dark:bg-slate-900 p-4 border dark:border-slate-800 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition"><div><div class="flex items-center gap-2 mb-1"><i class="fa-regular fa-calendar text-slate-400 text-xs"></i><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">${dt}</p></div><p class="font-extrabold text-sm text-slate-800 dark:text-white">${d.nama}</p><p class="text-[10px] text-slate-400 mt-0.5 italic truncate max-w-[150px]">${d.keterangan || '-'}</p></div><span class="px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider ${stColor}">${d.status}</span></div>`; }); } const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; document.getElementById('pageInfo').innerText = `${currentPage}/${totalPages}`; }
+        function prevPage(){if(currentPage > 1){currentPage--;renderPublicTable();}}
+        function nextPage(){const totalPages = Math.ceil(processedPublicData.length / rowsPerPage) || 1; if(currentPage < totalPages){currentPage++;renderPublicTable();}}
 
-        function switchPage(p){
-            document.querySelectorAll('.page-content').forEach(e=>e.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden');
-            ['nav-dashboard','nav-input','nav-nilai','nav-rekap','nav-jurnal','nav-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('active-nav');e.classList.remove('bg-indigo-50');e.classList.remove('dark:bg-slate-800');e.classList.add('text-slate-500');e.classList.add('dark:text-slate-400')});
-            document.getElementById('nav-'+p).classList.add('active-nav'); document.getElementById('nav-'+p).classList.add('bg-indigo-50'); document.getElementById('nav-'+p).classList.add('dark:bg-slate-800');
-            ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
-            document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
-        }
+        function switchPage(p){
+            document.querySelectorAll('.page-content').forEach(e=>e.classList.add('hidden')); document.getElementById('page-'+p).classList.remove('hidden');
+            ['nav-dashboard','nav-input','nav-nilai','nav-rekap','nav-jurnal','nav-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('active-nav');e.classList.remove('bg-indigo-50');e.classList.remove('dark:bg-slate-800');e.classList.add('text-slate-500');e.classList.add('dark:text-slate-400')});
+            document.getElementById('nav-'+p).classList.add('active-nav'); document.getElementById('nav-'+p).classList.add('bg-indigo-50'); document.getElementById('nav-'+p).classList.add('dark:bg-slate-800');
+            ['mob-dashboard','mob-input','mob-nilai','mob-rekap','mob-jurnal','mob-catatan'].forEach(i=>{const e=document.getElementById(i);e.classList.remove('text-indigo-600');e.classList.add('text-slate-300')});
+            document.getElementById('mob-'+p).classList.add('text-indigo-600'); document.getElementById('mob-'+p).classList.remove('text-slate-300');
+        }
 
-        // --- NEW FEATURES HELPER (V38) ---
-        function togglePassword() {
-            const p = document.getElementById('password');
-            const i = document.getElementById('eyeIcon');
-            if (p.type === 'password') {
-                p.type = 'text';
-                i.classList.remove('fa-eye');
-                i.classList.add('fa-eye-slash');
-            } else {
-                p.type = 'password';
-                i.classList.remove('fa-eye-slash');
-                i.classList.add('fa-eye');
-            }
-        }
-        // --- LANJUTAN KODE FRONTEND (FITUR EDIT & HAPUS) ---
+        // --- NEW FEATURES HELPER ---
+        function togglePassword() {
+            const p = document.getElementById('password');
+            const i = document.getElementById('eyeIcon');
+            if (p.type === 'password') {
+                p.type = 'text';
+                i.classList.remove('fa-eye');
+                i.classList.add('fa-eye-slash');
+            } else {
+                p.type = 'password';
+                i.classList.remove('fa-eye-slash');
+                i.classList.add('fa-eye');
+            }
+        }
+        // --- FITUR EDIT & HAPUS ---
 
-        // 1. Tombol Aksi untuk Tabel Nilai (Mode Detail)
-        function getActionButtonsNilai(id, nilaiLama) {
-            return `<div class="flex gap-2 justify-end">
-                <button onclick="editNilai('${id}', '${nilaiLama}')" class="text-amber-500 hover:text-amber-600 transition"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="hapusData('${id}', 'DataNilai', fetchNilaiReport)" class="text-red-500 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-        }
+        // 1. Tombol Aksi untuk Tabel Nilai
+        function getActionButtonsNilai(id, nilaiLama) {
+            return `<div class="flex gap-2 justify-end">
+                <button onclick="editNilai('${id}', '${nilaiLama}')" class="text-amber-500 hover:text-amber-600 transition"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="hapusData('${id}', 'DataNilai', fetchNilaiReport)" class="text-red-500 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+        }
 
-        // 2. Fungsi Hapus Universal (Bisa untuk Nilai & Jurnal)
-        async function hapusData(id, sheetName, callbackRefresh) {
-            const result = await Swal.fire({
-                title: 'Hapus Data?', 
-                text: "Data yang dihapus tidak bisa dikembalikan!", 
-                icon: 'warning',
-                showCancelButton: true, 
-                confirmButtonColor: '#ef4444', 
-                confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
-            });
+        // 2. Fungsi Hapus Universal
+        async function hapusData(id, sheetName, callbackRefresh) {
+            const result = await Swal.fire({
+                title: 'Hapus Data?', 
+                text: "Data yang dihapus tidak bisa dikembalikan!", 
+                icon: 'warning',
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
 
-            if (result.isConfirmed) {
-                const r = await apiCall('deleteItem', { id: id, sheetName: sheetName });
-                if (r.status === 'success') {
-                    Swal.fire('Terhapus', r.message, 'success');
-                    if(callbackRefresh) callbackRefresh(); // Refresh tabel otomatis
-                } else {
-                    Swal.fire('Gagal', r.message, 'error');
-                }
-            }
-        }
+            if (result.isConfirmed) {
+                const r = await apiCall('deleteItem', { id: id, sheetName: sheetName });
+                if (r.status === 'success') {
+                    Swal.fire('Terhapus', r.message, 'success');
+                    if(callbackRefresh) callbackRefresh();
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
 
-        // 3. Fungsi Edit Nilai
-        async function editNilai(id, oldVal) {
-            const { value: newVal } = await Swal.fire({
-                title: 'Edit Nilai', 
-                input: 'number', 
-                inputValue: oldVal,
-                inputAttributes: { min: 0, max: 100 },
-                showCancelButton: true, 
-                confirmButtonText: 'Simpan',
-                cancelButtonText: 'Batal'
-            });
+        // 3. Fungsi Edit Nilai
+        async function editNilai(id, oldVal) {
+            const { value: newVal } = await Swal.fire({
+                title: 'Edit Nilai', 
+                input: 'number', 
+                inputValue: oldVal,
+                inputAttributes: { min: 0, max: 100 },
+                showCancelButton: true, 
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal'
+            });
 
-            if (newVal) {
-                const r = await apiCall('updateNilai', { id: id, nilaiBaru: newVal });
-                if (r.status === 'success') {
-                    Swal.fire('Berhasil', r.message, 'success');
-                    fetchNilaiReport(); // Refresh tabel
-                } else {
-                    Swal.fire('Gagal', r.message, 'error');
-                }
-            }
-        }
+            if (newVal) {
+                const r = await apiCall('updateNilai', { id: id, nilaiBaru: newVal });
+                if (r.status === 'success') {
+                    Swal.fire('Berhasil', r.message, 'success');
+                    fetchNilaiReport();
+                } else {
+                    Swal.fire('Gagal', r.message, 'error');
+                }
+            }
+        }
 
-        // 4. Logika Edit Jurnal (Menyiapkan Form)
-        function setupEditJurnal(idx) {
-            const data = globalJurnalHistory[idx];
-            // Isi form dengan data lama dari tabel
-            document.getElementById('editJurnalId').value = data.id || ''; 
-            // Konversi format tanggal agar terbaca input date HTML
-            try {
-                document.getElementById('jurDate').value = new Date(data.date).toISOString().split('T')[0];
-            } catch(e) { console.log('Date parse error', e); }
-            
-            document.getElementById('jurKelas').value = data.kelas;
-            document.getElementById('jurJam').value = data.jam;
-            document.getElementById('jurMateri').value = data.materi;
-            document.getElementById('jurMetode').value = data.metode;
-            document.getElementById('jurTindak').value = data.tindak;
-            document.getElementById('jurCatatan').value = data.catatan;
-            
-            // Tampilkan Badge Mode Edit
-            document.getElementById('editModeBadge').classList.remove('hidden');
-            
-            // Pindah Tab ke Input
-            switchJurnalTab('input');
-            Swal.fire({icon:'info', title:'Mode Edit Aktif', text:'Silakan ubah data lalu tekan tombol Simpan Jurnal.', timer:2000, showConfirmButton:false});
-        }
+        // 4. Logika Edit Jurnal
+        function setupEditJurnal(idx) {
+            const data = globalJurnalHistory[idx];
+            document.getElementById('editJurnalId').value = data.id || ''; 
+            try { document.getElementById('jurDate').value = new Date(data.date).toISOString().split('T')[0]; } catch(e) {}
+            document.getElementById('jurKelas').value = data.kelas;
+            document.getElementById('jurJam').value = data.jam;
+            document.getElementById('jurMateri').value = data.materi;
+            document.getElementById('jurMetode').value = data.metode;
+            document.getElementById('jurTindak').value = data.tindak;
+            document.getElementById('jurCatatan').value = data.catatan;
+            document.getElementById('editModeBadge').classList.remove('hidden');
+            switchJurnalTab('input');
+            Swal.fire({icon:'info', title:'Mode Edit Aktif', text:'Silakan ubah data lalu tekan tombol Simpan Jurnal.', timer:2000, showConfirmButton:false});
+        }
 
-        // 5. Batal Edit Jurnal
-        function cancelEditJurnal() {
-            document.getElementById('editJurnalId').value = '';
-            document.getElementById('editModeBadge').classList.add('hidden');
-            
-            // Reset Form
-            document.getElementById('jurMateri').value = '';
-            document.getElementById('jurCatatan').value = '';
-            document.getElementById('jurTindak').value = '';
-            document.getElementById('jurJam').value = '';
-            document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
-            
-            Swal.fire('Edit Dibatalkan', 'Form telah dikosongkan.', 'info');
-        }
+        function cancelEditJurnal() {
+            document.getElementById('editJurnalId').value = '';
+            document.getElementById('editModeBadge').classList.add('hidden');
+            document.getElementById('jurMateri').value = '';
+            document.getElementById('jurCatatan').value = '';
+            document.getElementById('jurTindak').value = '';
+            document.getElementById('jurJam').value = '';
+            document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+            Swal.fire('Edit Dibatalkan', 'Form telah dikosongkan.', 'info');
+        }
 
-        // 6. OVERRIDE Save Jurnal (Agar Cerdas Mendeteksi Edit vs Baru)
-        // Fungsi ini akan menimpa fungsi saveJurnal() yang lama
-        async function saveJurnal() {
-            const editId = document.getElementById('editJurnalId').value;
-            
-            const p = {
-                id: editId, // Kirim ID jika sedang edit, kosong jika baru
-                date: document.getElementById('jurDate').value,
-                kelas: document.getElementById('jurKelas').value,
-                jam: document.getElementById('jurJam').value,
-                materi: document.getElementById('jurMateri').value,
-                metode: document.getElementById('jurMetode').value,
-                tindak: document.getElementById('jurTindak').value,
-                catatan: document.getElementById('jurCatatan').value,
-                s_total: document.getElementById('jurStatTotal').innerText,
-                s_hadir: document.getElementById('jurStatHadir').innerText,
-                s_absen: document.getElementById('jurStatAbsen').innerText,
-                guru: currentUser.nama, 
-                mapel: currentUser.mapel
-            };
-            
-            // Validasi Sederhana
-            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Data Belum Lengkap', 'Mohon lengkapi Kelas, Jam, dan Materi Pokok.', 'warning');
-            
-            // Tentukan Action: Simpan Baru atau Update?
-            let action = 'saveJurnal';
-            if (editId !== "") action = 'updateJurnal';
-
-            const r = await apiCall(action, p);
-            
-            if(r.status === 'success') {
-                Swal.fire({
-                    icon:'success', 
-                    title: editId ? 'Jurnal Diperbarui' : 'Jurnal Tersimpan', 
-                    showConfirmButton:false, 
-                    timer:1500
-                });
-
-                if(editId) {
-                    cancelEditJurnal(); // Keluar mode edit setelah update
-                } else {
-                    // Reset form jika simpan baru
-                    document.getElementById('jurMateri').value = ''; 
-                    document.getElementById('jurCatatan').value = '';
-                    document.getElementById('jurJam').value = '';
-                    document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
-                }
-            } else {
-                Swal.fire('Gagal', r.message, 'error');
-            }
+        // 5. OVERRIDE Save Jurnal
+        async function saveJurnal() {
+            const editId = document.getElementById('editJurnalId').value;
+            const p = {
+                id: editId,
+                date: document.getElementById('jurDate').value,
+                kelas: document.getElementById('jurKelas').value,
+                jam: document.getElementById('jurJam').value,
+                materi: document.getElementById('jurMateri').value,
+                metode: document.getElementById('jurMetode').value,
+                tindak: document.getElementById('jurTindak').value,
+                catatan: document.getElementById('jurCatatan').value,
+                s_total: document.getElementById('jurStatTotal').innerText,
+                s_hadir: document.getElementById('jurStatHadir').innerText,
+                s_absen: document.getElementById('jurStatAbsen').innerText,
+                guru: currentUser.nama, 
+                mapel: currentUser.mapel
+            };
+            if(!p.kelas || !p.jam || !p.materi) return Swal.fire('Data Belum Lengkap', 'Mohon lengkapi Kelas, Jam, dan Materi Pokok.', 'warning');
+            let action = editId !== "" ? 'updateJurnal' : 'saveJurnal';
+            const r = await apiCall(action, p);
+            if(r.status === 'success') {
+                Swal.fire({ icon:'success', title: editId ? 'Jurnal Diperbarui' : 'Jurnal Tersimpan', showConfirmButton:false, timer:1500 });
+                if(editId) { cancelEditJurnal(); } 
+                else {
+                    document.getElementById('jurMateri').value = ''; 
+                    document.getElementById('jurCatatan').value = '';
+                    document.getElementById('jurJam').value = '';
+                    document.querySelectorAll('.jam-btn').forEach(b => b.classList.remove('selected'));
+                }
+            } else { Swal.fire('Gagal', r.message, 'error'); }
 		 }
-		// --- FITUR PROFIL 360 (V39) ---
+		// --- FITUR PROFIL 360 ---
 		async function viewProfile(nisn) {
-			// Tampilkan loading dulu
 			const modal = document.getElementById('modalProfile');
 			modal.classList.remove('hidden');
 			document.getElementById('profName').innerText = "Memuat Data...";
 			document.getElementById('profKelas').innerText = "Mohon Tunggu...";
-			document.getElementById('profImg').src = "https://api.dicebear.com/9.x/micah/svg?seed=loading"; // Placeholder
-
-			// Panggil Backend
+			document.getElementById('profImg').src = "https://api.dicebear.com/9.x/micah/svg?seed=loading";
 			const r = await apiCall('getStudentProfile', { nisn: nisn });
-
 			if(r.status === 'success') {
 				const i = r.info;
-				// Set Data Dasar
 				document.getElementById('profName').innerText = i.nama;
 				document.getElementById('profKelas').innerText = `${i.kelas} • ${i.nisn}`;
-				// Generate Kartun Lucu dari Nama
 				document.getElementById('profImg').src = `https://api.dicebear.com/9.x/micah/svg?seed=${i.nama}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
-
-				// Set Statistik
 				document.getElementById('p-h').innerText = r.abs.h;
 				document.getElementById('p-s').innerText = r.abs.s;
 				document.getElementById('p-i').innerText = r.abs.i;
 				document.getElementById('p-a').innerText = r.abs.a;
 				document.getElementById('p-avg').innerText = r.avg || '-';
-
-				// Set Catatan
 				const nDiv = document.getElementById('profNotes');
 				if(r.notes.length > 0) {
-					nDiv.innerHTML = r.notes.map(n => 
+					nDiv.innerHTML = r.notes.map(n => 
 						`<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border-l-4 ${n.ket.includes('Prestasi')?'border-emerald-500':'border-red-500'}">
 							<div class="flex justify-between font-bold text-slate-700 dark:text-slate-300"><span>${n.ket}</span><span class="text-[10px] opacity-50">${n.tgl}</span></div>
 							<p class="mt-1 text-slate-500 truncate">${n.uraian}</p>
 					</div>`
 				).join('');
-			} else {
-				nDiv.innerHTML = '<div class="text-center italic text-slate-400 py-2">Bersih, tidak ada catatan.</div>';
-			}
-		} else {
-			closeProfile();
-			Swal.fire('Gagal', 'Data siswa tidak ditemukan', 'error');
-		}
+			} else { nDiv.innerHTML = '<div class="text-center italic text-slate-400 py-2">Bersih, tidak ada catatan.</div>'; }
+		} else { closeProfile(); Swal.fire('Gagal', 'Data siswa tidak ditemukan', 'error'); }
 	}
 
-	function closeProfile() {
-		document.getElementById('modalProfile').classList.add('hidden');
-	}
-		// --- FITUR EXPORT EXCEL (SIMPLE) ---
+	function closeProfile() { document.getElementById('modalProfile').classList.add('hidden'); }
+		
+		// --- FITUR EXPORT EXCEL ---
 		function exportToExcel() {
-			// Cek apakah data ada
 			if(!globalReportData || !globalReportData.data || globalReportData.data.length === 0) {
 				return Swal.fire('Data Kosong', 'Silakan klik PREVIEW terlebih dahulu.', 'warning');
-        }
-
-        const d = globalReportData;
-        let content = "";
-        let filename = "";
-
-        // 1. Tentukan Header & Isi Berdasarkan Tipe Laporan
-        if(d.type === 'absen') {
-            filename = `Laporan_Absensi_${d.k}.xls`;
-            // Header HTML Table
-            content += `<table border="1"><thead><tr style="background-color:#4f46e5;color:white;"><th>No</th><th>Nama Siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th>Total</th></tr></thead><tbody>`;
-            // Isi Data
-            d.data.forEach((r, i) => {
-                let total = r.h + r.s + r.i + r.a;
-                content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.h}</td><td>${r.s}</td><td>${r.i}</td><td style="color:red;font-weight:bold;">${r.a}</td><td>${total}</td></tr>`;
-            });
-        } 
-        else if (d.type === 'nilai') {
-            filename = `Leger_Nilai_${d.mapel}_${d.k}.xls`;
-            // Jika Mode Rapor (Leger)
-            if(d.mode === 'rapor') {
-                const students = processRaporData(d.data);
-                content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Nama Siswa</th><th>Tugas</th><th>Praktek</th><th>UH</th><th>UTS</th><th>UAS</th><th>NA</th></tr></thead><tbody>`;
-                students.forEach((r, i) => {
-                    content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.rt}</td><td>${r.rp}</td><td>${r.ruh}</td><td>${r.uts}</td><td>${r.uas}</td><td style="font-weight:bold;">${r.na}</td></tr>`;
-                });
-            } else {
-               // Jika Mode Detail (Raw Data)
-               content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Topik</th><th>Nilai</th></tr></thead><tbody>`;
-               d.data.forEach((r, i) => {
-                   content += `<tr><td>${i+1}</td><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.nama}</td><td>${r.jenis}</td><td>${r.topik}</td><td>${r.nilai}</td></tr>`;
-               });
-            }
-        }
-        content += `</tbody></table>`;
-
-        // 2. Buat File & Download
-        const uri = 'data:application/vnd.ms-excel;base64,';
-        const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head></head><body>' + content + '</body></html>';
-        const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
-
-        const link = document.createElement("a");
-        link.href = uri + base64(template);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-		// --- LOGIKA PENGUMUMAN (V39) ---
+        }
+        const d = globalReportData;
+        let content = "";
+        let filename = "";
+        if(d.type === 'absen') {
+            filename = `Laporan_Absensi_${d.k}.xls`;
+            content += `<table border="1"><thead><tr style="background-color:#4f46e5;color:white;"><th>No</th><th>Nama Siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th>Total</th></tr></thead><tbody>`;
+            d.data.forEach((r, i) => {
+                let total = r.h + r.s + r.i + r.a;
+                content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.h}</td><td>${r.s}</td><td>${r.i}</td><td style="color:red;font-weight:bold;">${r.a}</td><td>${total}</td></tr>`;
+            });
+        } 
+        else if (d.type === 'nilai') {
+            filename = `Leger_Nilai_${d.mapel}_${d.k}.xls`;
+            if(d.mode === 'rapor') {
+                const students = processRaporData(d.data);
+                content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Nama Siswa</th><th>Tugas</th><th>Praktek</th><th>UH</th><th>UTS</th><th>UAS</th><th>NA</th></tr></thead><tbody>`;
+                students.forEach((r, i) => {
+                    content += `<tr><td>${i+1}</td><td>${r.nama}</td><td>${r.rt}</td><td>${r.rp}</td><td>${r.ruh}</td><td>${r.uts}</td><td>${r.uas}</td><td style="font-weight:bold;">${r.na}</td></tr>`;
+                });
+            } else {
+               content += `<table border="1"><thead><tr style="background-color:#f59e0b;color:white;"><th>No</th><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Topik</th><th>Nilai</th></tr></thead><tbody>`;
+               d.data.forEach((r, i) => {
+                   content += `<tr><td>${i+1}</td><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.nama}</td><td>${r.jenis}</td><td>${r.topik}</td><td>${r.nilai}</td></tr>`;
+               });
+            }
+        }
+        content += `</tbody></table>`;
+        const uri = 'data:application/vnd.ms-excel;base64,';
+        const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head></head><body>' + content + '</body></html>';
+        const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
+        const link = document.createElement("a");
+        link.href = uri + base64(template);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+		// --- FITUR PENGUMUMAN ---
 		async function loadAnnouncements() {
 			const r = await apiCall('getAnnouncements');
 			const box = document.getElementById('annoBox');
-
 			if (r.status === 'success' && r.data.judul) {
-				box.classList.remove('hidden'); // Munculkan kotak
+				box.classList.remove('hidden');
 				document.getElementById('annoDate').innerText = r.data.tgl;
 				document.getElementById('annoTitle').innerText = r.data.judul;
 				document.getElementById('annoBody').innerText = r.data.isi;
-
-				// Cek jika tipe PENTING
 				if(r.data.tipe && r.data.tipe.toLowerCase().includes('penting')) {
 					document.getElementById('annoType').classList.remove('hidden');
-					box.classList.remove('from-amber-100', 'to-orange-100'); // Ganti warna jadi merah
+					box.classList.remove('from-amber-100', 'to-orange-100'); 
 					box.classList.add('from-red-50', 'to-rose-50', 'border-red-500');
 				}
-			} else {
-				box.classList.add('hidden'); // Sembunyikan jika tidak ada info
-			}
+			} else { box.classList.add('hidden'); }
 		}
+		function closeAnno() { document.getElementById('annoBox').classList.add('hidden'); }
 
-		function closeAnno() {
-			document.getElementById('annoBox').classList.add('hidden');
-	}
-		// --- FUNGSI SKELETON LOADING (EFEK DENYUT) ---
+		// --- VISUAL EFFECTS ---
 		function getSkeletonLoading(jumlah) {
 			let html = '';
 			for(let i=0; i<jumlah; i++) {
@@ -1518,24 +1496,11 @@
 			}
 			return html;
 	}
-		// Fungsi Pesta
 		function rayakanSukses() {
-			var count = 200;
-			var defaults = { origin: { y: 0.7 } };
-
-			function fire(particleRatio, opts) {
-				confetti(Object.assign({}, defaults, opts, {
-					particleCount: Math.floor(count * particleRatio)
-				}));
-			}
-
-			fire(0.25, { spread: 26, startVelocity: 55, });
-			fire(0.2, { spread: 60, });
-			fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-			fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-			fire(0.1, { spread: 120, startVelocity: 45, });
+			var count = 200; var defaults = { origin: { y: 0.7 } };
+			function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
+			fire(0.25, { spread: 26, startVelocity: 55, }); fire(0.2, { spread: 60, }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 }); fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 }); fire(0.1, { spread: 120, startVelocity: 45, });
 	}
-    </script>
+    </script>
 </body>
 </html>
-
