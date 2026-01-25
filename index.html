@@ -778,12 +778,28 @@
             const k = document.getElementById('nilaiKelas').value;
             const j = document.getElementById('nilaiJenis').value;
             const top = document.getElementById('nilaiTopik').value;
-            let dataToSend = []; currentNilaiStudents.forEach((s, i) => { const val = document.getElementById(`val_${i}`).value; if(val !== '') dataToSend.push({nisn: s.nisn, nama: s.nama, nilai: val}); });
-            if(dataToSend.length === 0) return Swal.fire('Data Kosong', 'Belum ada nilai yang diinput.', 'info');
+            
+            let dataToSend = []; 
+            
+            // [REVISI] Logika Paksa Simpan: Nilai kosong dianggap 0 agar tetap masuk database
+            currentNilaiStudents.forEach((s, i) => { 
+                let val = document.getElementById(`val_${i}`).value; 
+                if(val === '') val = 0; // Default ke 0 jika kosong
+                dataToSend.push({nisn: s.nisn, nama: s.nama, nilai: val}); 
+            });
+
+            if(dataToSend.length === 0) return Swal.fire('Data Kosong', 'Tidak ada siswa.', 'info');
             
             const r = await apiCall('saveNilai', {data: dataToSend, meta: {kelas: k, mapel: currentUser.mapel, jenis: j, topik: top, guru: currentUser.nama}});
             
-            if(r.status === 'success') { Swal.fire({icon: 'success', title: 'Nilai Tersimpan', text: r.message, timer: 2000, showConfirmButton: false}); rayakanSukses(); document.getElementById('nilaiTopik').value = ''; document.querySelectorAll('input[type=number]').forEach(el => el.value = ''); } else { Swal.fire('Gagal', r.message, 'error'); }
+            if(r.status === 'success') { 
+                Swal.fire({icon: 'success', title: 'Nilai Tersimpan', text: r.message, timer: 2000, showConfirmButton: false}); 
+                rayakanSukses(); 
+                document.getElementById('nilaiTopik').value = ''; 
+                document.querySelectorAll('input[type=number]').forEach(el => el.value = ''); 
+            } else { 
+                Swal.fire('Gagal', r.message, 'error'); 
+            }
         }
 
         // --- JURNAL MENGAJAR ---
