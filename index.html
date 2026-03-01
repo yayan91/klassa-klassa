@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KLASSA-16</title>
+
+	<link rel="icon" href="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" type="image/png">
+    <link rel="shortcut icon" href="https://drive.google.com/thumbnail?id=1Z6g-sCdw-k7W8dnw12NeagPkroLlmk-L" type="image/png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,6 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- [NEW] QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <script>
         tailwind.config = {
@@ -156,13 +160,62 @@
         .swal2-icon.swal2-success .swal2-success-ring { border: .25em solid rgba(16, 185, 129, .2) !important; }
         .swal2-icon.swal2-error { border-color: #ef4444 !important; }
         .swal2-icon.swal2-warning { border-color: #f97316 !important; color: #f97316 !important; }
+		
+		@keyframes loadingBar {
+			0% { transform: translateX(-100%); }
+			50% { transform: translateX(0); }
+			100% { transform: translateX(100%); }
+		}
+		@keyframes bookEnter {
+			0% { 
+				transform: translate(-50px, -50px) rotate(-45deg); 
+				opacity: 0; 
+			}
+			50% { 
+				transform: translate(0, 0) rotate(0deg); 
+				opacity: 1; 
+			}
+			80% { 
+				transform: scale(0.8); 
+				opacity: 0.5; 
+			}
+			100% { 
+				transform: scale(0.5); 
+				opacity: 0; 
+			}
+		}
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300">
 
-    <div id="loader" class="fixed inset-0 z-[100] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm hidden flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-14 w-14 border-[5px] border-primary border-t-transparent"></div>
-        <p class="mt-4 text-xs font-bold text-primary tracking-[0.3em] animate-pulse">Tunggu Yah...</p>
+    <div id="loader" class="fixed inset-0 z-[100] bg-[#0f172a]/90 backdrop-blur-xl hidden flex flex-col items-center justify-center">
+        <div class="relative flex flex-col items-center justify-center">
+            
+            <div class="relative w-32 h-32 flex items-center justify-center">
+                
+                <div class="absolute text-slate-700 opacity-40">
+                    <i class="fa-solid fa-shelves text-8xl"></i>
+                </div>
+
+                <div class="relative z-10 animate-[bookEnter_1.5s_infinite]">
+                    <i class="fa-solid fa-book-bookmark text-orange-500 text-5xl drop-shadow-[0_0_15px_rgba(249,115,22,0.6)]"></i>
+                </div>
+
+                <div class="absolute w-16 h-16 bg-orange-500/20 rounded-full blur-2xl animate-pulse"></div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <h3 class="text-white font-black tracking-[0.4em] text-sm uppercase">KLASSA-16</h3>
+                <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-2">
+                    <span class="inline-block animate-bounce">P</span>
+                    <span class="inline-block animate-bounce [animation-delay:0.1s]">r</span>
+                    <span class="inline-block animate-bounce [animation-delay:0.2s]">o</span>
+                    <span class="inline-block animate-bounce [animation-delay:0.3s]">s</span>
+                    <span class="inline-block animate-bounce [animation-delay:0.4s]">e</span>
+                    <span class="inline-block animate-bounce [animation-delay:0.5s]">s</span>
+                </p>
+            </div>
+        </div>
     </div>
 
     <div id="loginScreen" class="fixed inset-0 z-50 flex flex-col lg:flex-row bg-[#0f172a] relative overflow-hidden">
@@ -183,7 +236,7 @@
             <h2 class="text-xl xl:text-2xl font-bold text-blue-300 mb-8 tracking-wide">UPT SPF SMP Negeri 16 Makassar</h2>
             
             <p class="text-slate-400 text-lg leading-relaxed max-w-lg border-l-4 border-orange-500 pl-4">
-                Sistem Terpadu Manajemen Kehadiran, Penilaian, dan Bimbingan Konseling. Dirancang khusus untuk mempermudah tugas administrasi guru secara real-time dan akurat.
+                Sistem Terpadu Manajemen Kehadiran Siswa, Penilaian Guru, Jurnal Guru dan Catatan Siswa. Dirancang khusus untuk mempermudah tugas administrasi guru secara real-time dan akurat.
             </p>
             
             <div class="mt-12 flex flex-wrap gap-4">
@@ -261,7 +314,7 @@
             </div>
             <h3 class="text-2xl font-black text-white mb-2 text-orange-500">TENTANG KLASSA</h3>
             <p class="text-slate-300 text-sm leading-relaxed mb-8">
-                Sistem Terpadu Manajemen Kehadiran, Penilaian, dan Bimbingan Konseling UPT SPF SMP Negeri 16 Makassar. Dirancang untuk efisiensi administrasi guru secara real-time.
+               Sistem Terpadu Manajemen Kehadiran Siswa, Penilaian Guru, Jurnal Guru dan Catatan Siswa. Dirancang khusus untuk mempermudah tugas administrasi guru secara real-time dan akurat.
             </p>
             <div class="space-y-3 w-full">
                 <div class="bg-white/5 p-4 rounded-2xl border border-white/10 text-left flex items-center gap-4">
@@ -299,7 +352,7 @@
                     <div class="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/20 rounded-full blur-xl -ml-10 -mb-10"></div>
                     <div class="relative z-10">
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><i class="fa-solid fa-sparkles text-orange-400"></i> <span id="greetingText">Halo,</span></p>
-                        <p class="text-xl font-black truncate drop-shadow-md text-white" id="sidebarName">User</p>
+                        <p class="text-lg md:text-xl font-black drop-shadow-md text-white leading-tight break-words" id="sidebarName">User</p>
                         <div class="mt-2 inline-block px-3 py-1 bg-black/40 backdrop-blur-sm rounded-lg border border-slate-600">
                             <p class="text-[10px] text-orange-400 font-bold uppercase tracking-wider" id="sidebarMapel">Mapel</p>
                         </div>
@@ -354,7 +407,7 @@
                     <div class="bg-[#0f172a]/80 backdrop-blur-xl text-white py-3 px-5 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden flex items-center border border-white/10">
                         <span class="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-black px-3 py-1.5 rounded-xl mr-4 shrink-0 shadow-lg shadow-orange-500/30 flex items-center gap-2"><i class="fa-solid fa-bullhorn animate-bounce"></i> INFO GURU</span>
                         <div class="flex-1 overflow-hidden relative h-5">
-                            <div id="runningText" class="animate-ticker text-sm font-bold text-slate-200 uppercase tracking-widest w-full drop-shadow-md">
+                            <div id="runningText" class="animate-ticker text-sm font-bold text-slate-200 tracking-wide w-full drop-shadow-md">
                                 Memuat Info Guru...
                             </div>
                         </div>
@@ -452,6 +505,31 @@
                             <div class="bg-gradient-to-br from-emerald-600/80 to-[#0f172a]/90 backdrop-blur-xl p-8 rounded-[2rem] border border-emerald-400/30 shadow-2xl relative overflow-hidden"><div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl"></div><p class="text-[10px] font-black text-emerald-300 uppercase tracking-widest mb-2">Nilai Tertinggi</p><h3 class="text-5xl font-black text-white drop-shadow-md" id="dnHigh">-</h3><p class="text-xs mt-3 text-emerald-200 font-semibold truncate" id="dnHighName">-</p></div>
                             <div class="bg-gradient-to-br from-rose-600/80 to-[#0f172a]/90 backdrop-blur-xl p-8 rounded-[2rem] border border-rose-400/30 shadow-2xl relative overflow-hidden"><div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl"></div><p class="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-2">Nilai Terendah</p><h3 class="text-5xl font-black text-white drop-shadow-md" id="dnLow">-</h3><p class="text-xs mt-3 text-rose-200 font-semibold truncate" id="dnLowName">-</p></div>
                         </div>
+						
+						<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+							<div class="bg-[#0f172a]/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] lg:col-span-2 relative overflow-hidden group">
+								<div class="absolute -top-20 -right-20 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
+								<h3 class="font-black text-white mb-6 text-sm uppercase tracking-widest flex items-center gap-3 relative z-10">
+									<div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
+										<i class="fa-solid fa-compass-drafting"></i>
+									</div> 
+									Peta Kompetensi Kelas
+								</h3>
+								<div class="h-80 w-full relative z-10">
+									<canvas id="chartRadarNilai"></canvas>
+								</div>
+							</div>
+
+							<div class="bg-[#0f172a]/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col relative overflow-hidden">
+								<div class="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+								<h3 class="font-black text-white mb-6 text-sm uppercase tracking-widest border-b border-white/10 pb-4 relative z-10">
+									<i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-2"></i> Insight Data
+								</h3>
+								<div id="radarAnalysisText" class="space-y-4 mt-2 relative z-10 text-slate-300 text-xs font-medium leading-relaxed">
+									<div class="animate-pulse flex space-x-4"><div class="flex-1 space-y-4 py-1"><div class="h-4 bg-slate-700 rounded w-3/4"></div><div class="space-y-2"><div class="h-4 bg-slate-700 rounded"></div><div class="h-4 bg-slate-700 rounded w-5/6"></div></div></div></div>
+								</div>
+							</div>
+						</div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div class="bg-[#0f172a]/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] lg:col-span-2 relative overflow-hidden"><div class="absolute -top-20 -right-20 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div><h3 class="font-black text-white mb-6 text-sm uppercase tracking-widest flex items-center gap-3 relative z-10"><div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center"><i class="fa-solid fa-chart-column"></i></div> Rata-Rata Per Kelas</h3><div class="h-64 w-full relative z-10"><canvas id="chartNilaiBar"></canvas></div></div>
@@ -614,7 +692,7 @@
 						<div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] border border-white/50 dark:border-slate-700/50 shadow-2xl relative overflow-hidden">
 							<div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-400/20 dark:bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
 							
-							<h2 class="font-black text-2xl text-slate-800 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4 relative z-10 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex justify-center items-center text-indigo-600"><i class="fa-solid fa-user-shield text-xl"></i></div> Bimbingan & Konseling</h2>
+							<h2 class="font-black text-2xl text-slate-800 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4 relative z-10 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex justify-center items-center text-indigo-600"><i class="fa-solid fa-user-shield text-xl"></i></div> Catatan Siswa</h2>
 							
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 relative z-10">
 								<div class="relative"><i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i><input type="date" id="catDate" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3.5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner"></div>
@@ -903,7 +981,7 @@
 </div>
 
 	<script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw32MU0c1J1XpUMoDOi0j6q5dqoiw8ApJcB41OC_1JDT0sRdAIWEGx3ZQbKRXhGCSkr/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZX_tjI475zmVW8WwUFwa5j81avlZhbGevz41hDfHvLScvOhKfe1K64_Ci7FnQ9z7S/exec'; 
         
         let currentUser=null, currentStudents=[], currentNilaiStudents=[], schoolInfo={}, dashboardData={}, myChart=null, myDoughnut=null;
         let chartNilaiBar=null, chartNilaiDonat=null; 
@@ -932,22 +1010,42 @@
         async function apiCall(a,p={}){toggleLoader(1);p.action=a;try{const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(p)});const j=await r.json();toggleLoader(0);return j}catch(e){toggleLoader(0);Swal.fire('Error','Koneksi Gagal','error');return{status:'error'}}}
 
         async function handleLogin(e){
-            e.preventDefault(); const res=await apiCall('login',{username:document.getElementById('username').value,password:document.getElementById('password').value});
-            if(res.status==='success'){
-                currentUser=res.data;
-                document.getElementById('sidebarName').innerText=currentUser.nama.split(' ')[0]; document.getElementById('sidebarMapel').innerText=currentUser.mapel;
-                document.getElementById('greetingText').innerText = getGreeting(); document.getElementById('dashGreeting').innerText = getGreeting() + ", " + currentUser.nama.split(' ')[0];
+            e.preventDefault(); 
+            const res = await apiCall('login',{username:document.getElementById('username').value,password:document.getElementById('password').value});
+            
+            if(res.status === 'success'){
+                currentUser = res.data;
+
+                // 1. Ambil nama sebelum koma (untuk sapaan dashboard & sidebar)
+                const namaBersih = currentUser.nama.split(',')[0].trim();
+
+                // 2. Gunakan nama asli dari database (untuk Running Text agar lengkap gelar)
+                const namaLengkapGelar = currentUser.nama;
+
+                // Update Teks Sidebar & Dashboard
+                document.getElementById('sidebarName').innerText = namaBersih; 
+                document.getElementById('sidebarMapel').innerText = currentUser.mapel;
+                document.getElementById('greetingText').innerText = getGreeting(); 
+                document.getElementById('dashGreeting').innerText = getGreeting() + ", " + namaBersih;
                 document.getElementById('mapelTitle').innerText = `Analisis Akademik: ${currentUser.mapel}`;
-				
-				const rText = document.getElementById('runningText');
-				if(rText) {
-					const text = `SELAMAT DATANG, ${currentUser.nama}  —  GURU MATA PELAJARAN: ${currentUser.mapel}  —  SEMANGAT MENCERDASKAN ANAK BANGSA!  —  JANGAN LUPA ISI ABSEN DAN JURNAL HARI INI.`;
-					rText.innerText = text;
-				}
-                document.getElementById('loginScreen').style.display='none'; document.getElementById('mainApp').classList.remove('hidden');
+                
+                const rText = document.getElementById('runningText');
+                if(rText) {
+                    // Running text: Huruf normal (tidak kapital semua) tapi NAMA LENGKAP + GELAR
+                    const text = `Selamat datang, ${namaLengkapGelar}  —  Guru Mata Pelajaran: ${currentUser.mapel}  —  Semangat mencerdaskan anak bangsa!  —  Jangan lupa isi absen dan jurnal hari ini.`;
+                    rText.innerText = text;
+                    rText.style.textTransform = "none"; 
+                }
+
+                document.getElementById('loginScreen').style.display='none'; 
+                document.getElementById('mainApp').classList.remove('hidden');
                 loadDashboardStats(); loadClasses(); loadSchoolInfo();
-                const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true}); Toast.fire({icon: 'success', title: 'Berhasil Masuk'});
-            } else Swal.fire('Gagal','Login Salah','error');
+                
+                const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000}); 
+                Toast.fire({icon: 'success', title: 'Berhasil Masuk'});
+            } else {
+                Swal.fire('Gagal','Login Salah','error');
+            }
         }
 
         async function loadClasses(){
@@ -1177,7 +1275,11 @@
                 const bot = document.getElementById('bot10List'); bot.innerHTML='';
                 if(r.bottom10.length === 0) bot.innerHTML = '<tr><td colspan="3" class="py-6 text-center text-red-300 italic">Belum ada data nilai.</td></tr>';
                 r.bottom10.forEach(s => bot.innerHTML += `<tr class="border-b border-red-500/20 hover:bg-red-500/10 transition-colors"><td class="py-3 font-bold text-white drop-shadow-sm truncate max-w-[120px]">${s.nama}</td><td class="py-3 text-center font-semibold text-red-200 text-[11px]">${s.kelas}</td><td class="py-3 text-right font-black text-orange-400 text-lg">${s.na}</td></tr>`);
-            } else {
+            
+				const catData = r.summary.categories || { tugas: 0, praktek: 0, uh: 0, uts: 0, uas: 0 };
+				if (typeof renderRadarChart === "function") renderRadarChart(catData);
+							
+			} else {
                 document.getElementById('dnAvg').innerText = '-';
                 document.getElementById('dnHigh').innerText = '-';
                 document.getElementById('dnLow').innerText = '-';
@@ -2649,5 +2751,129 @@
 		`);
 		win.document.close();
 	}
+	
+	// === FUNGSI RADAR MEWAH (ANTI-ERROR & ANTI-BLANK) ===
+	let chartRadarNilai = null;
+
+	function renderRadarChart(data) {
+		const canvas = document.getElementById('chartRadarNilai');
+		if(!canvas) return; // Pengaman 1
+		
+		const ctxR = canvas.getContext('2d');
+		if(chartRadarNilai) chartRadarNilai.destroy();
+
+		// Pengaman 2: Cegah error jika canvas belum punya ukuran (saat tab tersembunyi)
+		const w = canvas.width || 300;
+		const h = canvas.height || 300;
+
+		// Efek Kaca Menyala (Radial Gradient)
+		const gradientRadar = ctxR.createRadialGradient(w/2, h/2, 0, w/2, h/2, 150);
+		gradientRadar.addColorStop(0, 'rgba(249, 115, 22, 0.4)');
+		gradientRadar.addColorStop(1, 'rgba(249, 115, 22, 0.05)');
+
+		// Pengaman 3: Cek apakah Plugin DataLabels berhasil di-load oleh browser
+		const radarPlugins = typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : [];
+
+		try {
+			chartRadarNilai = new Chart(ctxR, {
+				type: 'radar',
+				plugins: radarPlugins, 
+				data: {
+                    labels: ['Tugas', 'Praktek', 'UH', 'UTS', 'UAS'],
+                    datasets: [{
+                        label: 'Rata-rata Skor',
+                        data: [data.tugas||0, data.praktek||0, data.uh||0, data.uts||0, data.uas||0],
+                        fill: true,
+                        backgroundColor: gradientRadar,
+                        borderColor: '#f97316',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#f97316',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4 
+                    }]
+                },
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: false },
+						// PENGATURAN KOTAK ANGKA 
+						datalabels: {
+							backgroundColor: '#0f172a',
+							borderRadius: 6,
+							color: '#fff',
+							font: { weight: 'bold', size: 10 },
+							padding: 4,
+							// Logika cerdas: Sembunyikan kotak jika nilainya 0
+							display: function(context) {
+								return context.dataset.data[context.dataIndex] > 0;
+							},
+							formatter: Math.round,
+							anchor: 'end',
+							align: 'top',
+							offset: 5,
+							borderWidth: 1,
+							borderColor: 'rgba(249, 115, 22, 0.5)'
+						}
+					},
+					scales: {
+						r: {
+							grid: { circular: true, color: 'rgba(255,255,255,0.05)' }, 
+							angleLines: { color: 'rgba(255,255,255,0.1)' },
+							pointLabels: { color: '#cbd5e1', font: { size: 11, weight: '900' }, padding: 15 },
+							ticks: { display: false },
+							suggestedMin: 0, suggestedMax: 100
+						}
+					}
+				}
+			});
+		} catch(err) {
+			console.log("Radar tertunda:", err);
+		}
+		
+		// Pastikan Insight Data tetap dipanggil meski grafik bermasalah
+		updateRadarAnalysis(data);
+	}
+
+	function updateRadarAnalysis(data) {
+		const container = document.getElementById('radarAnalysisText');
+		if(!container) return;
+
+		const scores = [
+			{n: 'Tugas', v: data.tugas||0}, {n: 'Praktek', v: data.praktek||0},
+			{n: 'UH', v: data.uh||0}, {n: 'UTS', v: data.uts||0}, {n: 'UAS', v: data.uas||0}
+		];
+		
+		// Logika Cerdas: Cek apakah SEMUA data masih 0
+		const totalScore = scores.reduce((sum, item) => sum + item.v, 0);
+		
+		if (totalScore === 0) {
+			container.innerHTML = `
+				<div class="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl text-center">
+					<i class="fa-solid fa-satellite-dish text-3xl text-blue-400 mb-3 opacity-50 animate-pulse"></i>
+					<p class="text-blue-300 text-[10px] font-black uppercase tracking-widest">Memindai Data...</p>
+					<p class="text-slate-400 text-xs mt-2">Belum ada input nilai untuk kelas ini. Grafik akan muncul setelah data dinilai.</p>
+				</div>`;
+			return;
+		}
+
+		// Jika ada data, cari yang tertinggi dan terendah
+		const high = scores.reduce((prev, curr) => (prev.v > curr.v) ? prev : curr);
+		const low = scores.reduce((prev, curr) => (prev.v < curr.v) ? prev : curr);
+
+		container.innerHTML = `
+			<div class="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl mb-3">
+				<p class="text-emerald-400 font-black text-[10px] uppercase mb-1">Kekuatan Utama</p>
+				<p class="text-white text-sm">Siswa kompeten pada <strong>${high.n}</strong> (${high.v}).</p>
+			</div>
+			<div class="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl">
+				<p class="text-rose-400 font-black text-[10px] uppercase mb-1">Perlu Bimbingan</p>
+				<p class="text-white text-sm">Capaian terendah pada <strong>${low.n}</strong> (${low.v}).</p>
+			</div>
+		`;
+	}
+	// === END FUNGSI RADAR ===
 	
     </script>
