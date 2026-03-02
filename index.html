@@ -543,60 +543,122 @@
                     </div>
                 </div>
 
-                <div id="page-input" class="page-content hidden space-y-6">
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 sticky top-0 z-20 flex flex-col gap-3">
-                        <div class="flex flex-col md:flex-row gap-3">
-                            <input type="date" id="inputDate" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
-                            <select id="inputKelas" onchange="loadInputData()" class="flex-1 bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary transition"><option value="">- Pilih Kelas -</option></select>
-                        </div>
-                        <!-- [NEW] Turbo Filter -->
-                        <div class="flex gap-2 overflow-x-auto pb-1" id="turboFilterContainer" style="display:none;">
-                            <button onclick="setTurboFilter('all')" id="tf-all" class="px-4 py-2 rounded-full text-xs font-bold bg-slate-800 text-white transition whitespace-nowrap">Semua</button>
-                            <button onclick="setTurboFilter('hadir')" id="tf-hadir" class="px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-200 transition whitespace-nowrap hover:bg-slate-50">Hadir</button>
-                            <button onclick="setTurboFilter('absen')" id="tf-absen" class="px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-500 border border-slate-200 transition whitespace-nowrap hover:bg-slate-50">Tidak Hadir</button>
-                        </div>
-                    </div>
-                    <div class="relative"><i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchStudent" onkeyup="filterStudents()" class="w-full bg-white dark:bg-slate-900 pl-11 pr-4 py-3.5 rounded-xl border-0 ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm transition dark:text-white" placeholder="Cari nama siswa..."></div>
-                    <div id="inputList" class="space-y-3 max-h-[500px] overflow-y-auto p-2"></div>
-                    <div id="fabSave" class="hidden mt-8 pb-10">
-						<button onclick="saveAbsen()" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-5 rounded-[2rem] shadow-[0_15px_30px_rgba(249,115,22,0.3)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.4)] font-black flex items-center justify-center gap-4 transition-all active:scale-95 group">
-							<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:rotate-12 transition-transform">
-								<i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                <div id="page-input" class="page-content hidden space-y-4 pb-20">
+					<div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 sticky top-0 z-30 flex flex-col gap-3">
+						<div class="flex flex-col sm:flex-row gap-3">
+							<div class="relative flex-1">
+								<i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-orange-500 text-sm"></i>
+								<input type="date" id="inputDate" onchange="loadInputData()" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs font-black text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-inner">
 							</div>
-							<span class="tracking-[0.1em]">SIMPAN DATA ABSENSI</span>
+							<div class="relative flex-1">
+								<i class="fa-solid fa-chalkboard-user absolute left-3 top-1/2 -translate-y-1/2 text-orange-500 text-sm"></i>
+								<select id="inputKelas" onchange="loadInputData()" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs font-black text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-inner cursor-pointer">
+									<option value="">- Pilih Kelas -</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="flex flex-col sm:flex-row gap-3">
+							<div class="flex gap-1.5 overflow-x-auto scrollbar-hide flex-1" id="turboFilterContainer" style="display:none;">
+								<button onclick="setTurboFilter('all')" id="tf-all" class="px-4 py-2 rounded-lg text-[10px] font-black bg-slate-800 text-white shadow-sm transition-all whitespace-nowrap active:scale-95">Semua</button>
+								<button onclick="setTurboFilter('hadir')" id="tf-hadir" class="px-3 py-2 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all whitespace-nowrap active:scale-95">Hadir</button>
+								<button onclick="setTurboFilter('absen')" id="tf-absen" class="px-3 py-2 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all whitespace-nowrap active:scale-95">Absen</button>
+							</div>
+							<div class="relative flex-1">
+								<i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+								<input type="text" id="searchStudent" onkeyup="filterStudents()" class="w-full bg-slate-50 dark:bg-slate-950 pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-orange-500 outline-none text-xs font-bold transition-all dark:text-white shadow-inner" placeholder="Cari nama...">
+							</div>
+						</div>
+					</div>
+
+					<div id="inputList" class="space-y-2">
+						<div class="flex flex-col items-center justify-center py-10 opacity-50">
+							<i class="fa-solid fa-list-check text-5xl text-slate-300 mb-3"></i>
+							<p class="text-slate-400 font-bold text-xs tracking-wide">Pilih kelas & tanggal di atas</p>
+						</div>
+					</div>
+
+					<div id="fabSave" class="hidden mt-6 pb-6">
+						<button onclick="saveAbsen()" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-4 rounded-2xl shadow-[0_10px_25px_rgba(249,115,22,0.3)] hover:shadow-[0_15px_30px_rgba(249,115,22,0.4)] font-black flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 group">
+							<i class="fa-solid fa-cloud-arrow-up text-lg group-hover:-translate-y-1 transition-transform"></i>
+							<span class="tracking-widest uppercase text-sm">Simpan Absensi</span>
 						</button>
 					</div>
 				</div>
 
-                <div id="page-nilai" class="page-content hidden space-y-6">
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4">
-                        <h3 class="font-extrabold text-lg text-slate-800 dark:text-white flex items-center gap-2 border-b dark:border-slate-800 pb-3"><i class="fa-solid fa-star text-amber-500"></i> Input Penilaian</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                             <select id="nilaiKelas" onchange="loadNilaiStudents()" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary"><option value="">- Pilih Kelas -</option></select>
-                             <select id="nilaiJenis" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary">
-                                <option value="Tugas">Tugas</option>
-                                <option value="Praktek">Praktek</option>
-                                <option value="UH">Ulangan Harian</option>
-                                <option value="UTS">UTS (Tengah Semester)</option>
-                                <option value="UAS">UAS (Akhir Semester)</option>
-                             </select>
-                        </div>
-                        <input type="text" id="nilaiTopik" class="w-full bg-slate-50 dark:bg-slate-800 border-0 ring-1 ring-slate-200 dark:ring-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-primary" placeholder="Topik / Keterangan (Wajib diisi, misal: 'Tugas 1 Pantun')">
-                        <button onclick="loadNilaiStudents()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-900 transition">MUAT SISWA</button>
-                    </div>
-                    <div id="nilaiListWrapper" class="hidden">
-                        <div class="flex justify-between items-center px-2 mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Daftar Siswa</span><span class="text-xs text-slate-400 italic">*Tulis 0 jika ada siswa belum ada nilainya</span></div>
-                        <div id="nilaiList" class="space-y-2 max-h-[400px] overflow-y-auto p-2 border-t dark:border-slate-800 pt-2"></div>
-                        <div class="mt-8 pb-10">
-							<button onclick="saveNilai()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white py-5 rounded-[2rem] shadow-[0_15px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_20px_40px_rgba(245,158,11,0.4)] font-black flex items-center justify-center gap-4 transition-all active:scale-95 group">
-								<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-									<i class="fa-solid fa-star-sharp text-xl"></i>
-								</div>
-								<span class="tracking-[0.1em]">PUBLIKASI NILAI SISWA</span>
+                <div id="page-nilai" class="page-content hidden space-y-4 pb-20">
+					<div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-4 rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 sticky top-0 z-30 flex flex-col gap-3">
+						<div class="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+							<div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center"><i class="fa-solid fa-star text-xs"></i></div>
+							<h3 class="font-black text-sm text-slate-800 dark:text-white uppercase tracking-widest">Input Penilaian</h3>
+						</div>
+						
+						<div class="flex flex-col sm:flex-row gap-2.5">
+							<div class="relative flex-1">
+								<i class="fa-solid fa-chalkboard-user absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 text-xs"></i>
+								<select id="nilaiKelas" onchange="loadNilaiStudents()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-amber-500 transition-all shadow-inner cursor-pointer">
+									<option value="">- Pilih Kelas -</option>
+								</select>
+							</div>
+							<div class="relative flex-1">
+								<i class="fa-solid fa-layer-group absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 text-xs"></i>
+								<select id="nilaiJenis" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-amber-500 transition-all shadow-inner cursor-pointer">
+									<option value="Tugas">Tugas</option>
+									<option value="Praktek">Praktek</option>
+									<option value="UH">Ulangan Harian</option>
+									<option value="UTS">UTS</option>
+									<option value="UAS">UAS</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="flex flex-col sm:flex-row gap-2.5">
+							<div class="relative flex-[2]">
+								<i class="fa-solid fa-pen absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+								<input type="text" id="nilaiTopik" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-amber-500 transition-all shadow-inner placeholder-slate-400" placeholder="Topik (Contoh: Pantun)...">
+							</div>
+							<button onclick="loadNilaiStudents()" class="flex-1 bg-slate-800 dark:bg-amber-500 text-white font-black text-[10px] uppercase tracking-widest py-2 rounded-xl hover:bg-slate-900 dark:hover:bg-amber-600 transition-all active:scale-95 shadow-md">Muat Data</button>
+						</div>
+					</div>
+
+					<div id="nilaiListWrapper" class="hidden">
+						
+						<div id="nilaiList" class="space-y-3 p-1"></div>
+						
+						<div id="warningNilai" class="mt-5 mb-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl flex items-center gap-3 transition-all hidden shadow-sm">
+							<div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+								<i class="fa-solid fa-triangle-exclamation text-lg animate-pulse"></i>
+							</div>
+							<div>
+								<h4 class="text-sm font-black text-red-600 dark:text-red-400 leading-tight">Perhatian!</h4>
+								<p class="text-xs font-bold text-red-500 mt-0.5">Ada <span id="countBelumDinilai" class="text-red-600 dark:text-red-400 text-sm font-black mx-0.5">0</span> siswa yang nilainya masih kosong/nol.</p>
+							</div>
+						</div>
+						<div class="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl flex items-start gap-3 shadow-sm">
+							<div class="mt-0.5 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-500 shrink-0">
+								<i class="fa-solid fa-lightbulb text-sm animate-pulse"></i>
+							</div>
+							<div>
+								<h4 class="text-sm font-black text-indigo-700 dark:text-indigo-400 leading-tight mb-1">Informasi Pengubahan Data</h4>
+								<p class="text-xs font-medium text-indigo-600 dark:text-indigo-300 leading-relaxed">
+									Jika ingin mengedit nilai yang sudah tersimpan, silakan buka menu: <br>
+									<span class="inline-block mt-1.5 font-bold bg-indigo-100 dark:bg-indigo-800/60 px-2 py-1 rounded-lg text-[10px] uppercase tracking-wider shadow-inner border border-indigo-200 dark:border-indigo-700">
+										<i class="fa-solid fa-file-invoice mr-1"></i> Laporan 
+										<i class="fa-solid fa-chevron-right text-[8px] mx-1 text-indigo-400"></i> Laporan Nilai 
+										<i class="fa-solid fa-chevron-right text-[8px] mx-1 text-indigo-400"></i> Matrix Kelas
+									</span>
+								</p>
+							</div>
+						</div>
+
+						<div class="mt-4 pb-6">
+							<button onclick="saveNilai()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white py-4 rounded-2xl shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_30px_rgba(245,158,11,0.4)] font-black flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 group">
+								<i class="fa-solid fa-star-sharp text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+								<span class="tracking-widest uppercase text-sm">Simpan Nilai</span>
 							</button>
 						</div>
 					</div>
-                </div>
+				</div>
 
                 <div id="page-jurnal" class="page-content hidden space-y-6 animate-fade-in">
 					<div class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-1.5 rounded-2xl shadow-sm border border-white/40 dark:border-slate-800/50 flex sticky top-0 z-20">
@@ -1287,52 +1349,104 @@
         }
 
         // --- INPUT ABSEN ---
-        async function loadInputData(){
-            const k=document.getElementById('inputKelas').value, t=document.getElementById('inputDate').value;
-            if(!k||!t)return;
-            const l=document.getElementById('inputList'); l.innerHTML = getSkeletonLoading(5);
-            const r=await apiCall('getStudents',{kelas:k,tanggal:t}); l.innerHTML='';
-            if(r.status==='success'){
-                currentStudents=r.data; 
-                document.getElementById('fabSave').classList.remove('hidden');
-                document.getElementById('turboFilterContainer').style.display = 'flex'; 
-                
-                // --- PENAMBAHAN LIVE COUNTER STICKY ---
-                let html = `
-                <div class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-3xl shadow-md border border-slate-200 dark:border-slate-700 mb-4 flex justify-between items-center transition-all">
-                    <span class="text-[10px] md:text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-indigo-500 animate-pulse"></i> Rekap Live</span>
-                    <div class="flex gap-3 md:gap-5 text-sm md:text-base font-black">
-                        <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">H: <span id="liveH">0</span></span>
-                        <span class="text-amber-500 dark:text-amber-400 flex items-center gap-1">S: <span id="liveS">0</span></span>
-                        <span class="text-blue-500 dark:text-blue-400 flex items-center gap-1">I: <span id="liveI">0</span></span>
-                        <span class="text-red-600 dark:text-red-400 flex items-center gap-1 bg-red-50 dark:bg-red-900/20 px-2 rounded-lg">A: <span id="liveA">0</span></span>
-                    </div>
-                </div>`;
+        async function loadInputData() {
+			const k = document.getElementById('inputKelas').value;
+			const t = document.getElementById('inputDate').value;
+			if (!k || !t) return;
+			
+			const l = document.getElementById('inputList'); 
+			l.innerHTML = getSkeletonLoading(5);
+			
+			const r = await apiCall('getStudents', {kelas: k, tanggal: t}); 
+			l.innerHTML = '';
+			
+			if (r.status === 'success') {
+				currentStudents = r.data; 
+				document.getElementById('fabSave').classList.remove('hidden');
+				document.getElementById('turboFilterContainer').style.display = 'flex'; 
+				
+				// Header Info Live Mewah & Tengah
+				let html = `
+				<div class="flex justify-center mb-4 sticky top-4 z-40 pointer-events-none">
+					<div class="bg-[#0f172a]/95 backdrop-blur-2xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.4)] px-5 py-2.5 rounded-full flex items-center gap-4 pointer-events-auto">
+						<div class="flex items-center gap-2 pr-3 border-r border-white/10">
+							<span class="relative flex h-2 w-2">
+							  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+							  <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+							</span>
+							<span class="text-[10px] font-black uppercase tracking-widest text-orange-400">Live Kehadiran</span>
+						</div>
+						<div class="flex gap-4 text-xs font-black">
+							<span class="text-emerald-500 drop-shadow-md">Hadir: <span id="liveH" class="text-white">0</span></span>
+							<span class="text-amber-500 drop-shadow-md">Sakit: <span id="liveS" class="text-white">0</span></span>
+							<span class="text-blue-500 drop-shadow-md">Izin: <span id="liveI" class="text-white">0</span></span>
+							<span class="text-red-500 drop-shadow-md">Alpa: <span id="liveA" class="text-white">0</span></span>
+						</div>
+					</div>
+				</div>`;
 
-                html += currentStudents.map((s,i) => {
-                    const st = s.status_today || 'Hadir'; const waOk = st !== 'Hadir';
-                    let glowClass = 'border-slate-100 dark:border-slate-800';
-                    if(st==='Hadir') glowClass = 'border-emerald-400 shadow-emerald-500/20';
-                    if(st==='Sakit') glowClass = 'border-amber-400 shadow-amber-500/20';
-                    if(st==='Izin') glowClass = 'border-blue-400 shadow-blue-500/20';
-                    if(st==='Alpa') glowClass = 'border-red-500 shadow-red-500/30';
-                    
-                    return `<div id="card_${i}" class="student-card bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-lg border-2 ${glowClass} transition-all duration-300 mb-4" data-name="${s.nama.toLowerCase()}" data-status="${st}">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <h3 onclick="viewProfile('${s.nisn}')" class="font-black text-slate-800 dark:text-white text-lg cursor-pointer transition-transform duration-300 hover:translate-x-1 inline-flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-user"></i></div>${s.nama}</h3>
-                                <p class="text-[10px] font-bold text-slate-400 mt-1 tracking-widest uppercase ml-10">${s.nisn}</p>
-                            </div>
-                            <button id="waBtn-${i}" onclick="sendWA(${i})" class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${waOk?'bg-green-500 text-white shadow-lg shadow-green-500/40 cursor-pointer animate-pulse':'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed scale-90'}" ${waOk?'':'disabled'}><i class="fa-brands fa-whatsapp text-xl"></i></button>
-                        </div>
-                        <div class="grid grid-cols-4 gap-2 mb-4">${['Hadir','Sakit','Izin','Alpa'].map(x=>`<label class="status-radio cursor-pointer group w-full"><input type="radio" name="st_${i}" value="${x}" class="hidden r-${x[0].toLowerCase()}" ${st===x?'checked':''} onchange="updWA(${i}, '${x}')"><div class="py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 font-extrabold text-xs text-center border-2 border-transparent transition-all group-active:scale-95 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm">${x[0]}</div></label>`).join('')}</div>
-                        <div class="relative"><i class="fa-solid fa-pen absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input type="text" id="ket_${i}" value="${s.ket_today}" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border-0 rounded-2xl pl-10 pr-4 py-3 text-xs focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary transition-all outline-none font-bold" placeholder="Keterangan opsional..."></div>
-                    </div>`;
-                }).join('');
-                l.innerHTML = html;
-                calcLiveAbsen(); // Hitung pertama kali saat kelas dipilih
-            }
-        }
+				html += currentStudents.map((s, i) => {
+					const st = s.status_today || 'Hadir'; 
+					const waOk = st !== 'Hadir';
+					
+					// Background & Border tipis
+					let glowClass = 'border-slate-200 dark:border-slate-800';
+					if (st === 'Hadir') glowClass = 'border-emerald-300 bg-emerald-50/10 dark:bg-emerald-900/10';
+					if (st === 'Sakit') glowClass = 'border-amber-300 bg-amber-50/10 dark:bg-amber-900/10';
+					if (st === 'Izin') glowClass = 'border-blue-300 bg-blue-50/10 dark:bg-blue-900/10';
+					if (st === 'Alpa') glowClass = 'border-red-300 bg-red-50/10 dark:bg-red-900/10';
+					
+					// Loop pembuatan tombol absen (FULL TEKS tanpa Ikon, dengan peer-checked teks putih)
+					const radioButtonsHtml = ['Hadir', 'Sakit', 'Izin', 'Alpa'].map(x => `
+						<label class="status-radio cursor-pointer w-full">
+							<input type="radio" name="st_${i}" value="${x}" class="peer hidden r-${x[0].toLowerCase()}" ${st === x ? 'checked' : ''} onchange="updWA(${i}, '${x}')">
+							<div class="py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-500 peer-checked:!text-white font-extrabold text-xs text-center border border-transparent transition-all duration-300 hover:bg-slate-200 shadow-sm">
+								<span class="uppercase tracking-widest">${x}</span>
+							</div>
+						</label>
+					`).join('');
+
+					return `
+					<div id="card_${i}" class="student-card bg-white dark:bg-[#0f172a] p-4 rounded-2xl border-2 ${glowClass} transition-all duration-300 mb-3" data-name="${s.nama.toLowerCase()}" data-status="${st}">
+						
+						<div class="flex items-start justify-between gap-3 mb-3">
+							<div class="flex items-start gap-3 w-full">
+								<div class="relative shrink-0 mt-0.5">
+									<div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-black text-xs border border-slate-200 dark:border-slate-700 shadow-inner">
+										${i+1}
+									</div>
+									<div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#0f172a] ${st === 'Hadir' ? 'bg-emerald-500' : st === 'Sakit' ? 'bg-amber-500' : st === 'Izin' ? 'bg-blue-500' : 'bg-red-500'}"></div>
+								</div>
+								
+								<div class="flex-1">
+									<h3 onclick="viewProfile('${s.nisn}')" class="font-black text-slate-800 dark:text-white text-sm cursor-pointer hover:text-orange-500 leading-snug">${s.nama}</h3>
+									<p class="text-[11px] font-bold text-white tracking-widest uppercase mt-0.5"><i class="fa-solid fa-id-card mr-1 text-orange-400"></i>${s.nisn}</p>
+								</div>
+							</div>
+
+							<button id="waBtn-${i}" onclick="sendWA(${i})" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0 ${waOk ? 'bg-green-500 text-white shadow-sm cursor-pointer hover:bg-green-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed'}" ${waOk ? '' : 'disabled'}>
+								<i class="fa-brands fa-whatsapp text-sm"></i>
+							</button>
+						</div>
+
+						<div class="flex flex-col gap-2.5">
+							<div class="grid grid-cols-4 gap-2 w-full">
+								${radioButtonsHtml}
+							</div>
+							
+							<div class="relative w-full">
+								<i class="fa-solid fa-pen absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+								<input type="text" id="ket_${i}" value="${s.ket_today}" class="w-full bg-slate-50 dark:bg-[#1e293b] text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-xs focus:bg-white focus:ring-1 focus:ring-orange-500 outline-none font-bold placeholder-slate-400 transition-all" placeholder="Keterangan absen (Opsional)...">
+							</div>
+						</div>
+
+					</div>`;
+				}).join('');
+				
+				l.innerHTML = html;
+				calcLiveAbsen();
+			}
+		}
         
         // --- FUNGSI PENGHITUNG REAL-TIME ---
         function calcLiveAbsen() {
@@ -1434,48 +1548,127 @@
 
         // --- INPUT NILAI ---
         async function loadNilaiStudents() {
-            const k = document.getElementById('nilaiKelas').value;
-            const top = document.getElementById('nilaiTopik').value;
-            if(!k) return Swal.fire('Pilih Kelas', 'Silakan pilih kelas terlebih dahulu', 'warning');
-            if(!top) return Swal.fire('Isi Topik', 'Silakan isi Topik/Keterangan Penilaian.', 'warning');
-            document.getElementById('nilaiListWrapper').classList.remove('hidden');
-            const l = document.getElementById('nilaiList');
-            l.innerHTML = getSkeletonLoading(5);
-            const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'});
-            if(r.status === 'success') {
-                currentNilaiStudents = r.data;
-                
-                // Banner Rata-Rata Live
-                let html = `<div class="bg-gradient-to-r from-amber-500 to-orange-500 p-5 rounded-2xl shadow-lg shadow-orange-500/20 mb-4 flex justify-between items-center text-white relative overflow-hidden"><div class="absolute right-0 top-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-10 -mt-10"></div><span class="font-bold text-xs uppercase tracking-widest relative z-10"><i class="fa-solid fa-calculator mr-2"></i>Rata-Rata Kelas Live</span><span id="liveAvg" class="text-4xl font-black relative z-10">0</span></div>`;
-                
-                html += currentNilaiStudents.map((s, i) => `
-                <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border-b-2 border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <div class="flex-1 flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-xs text-slate-400 group-hover:text-amber-500 transition-colors shadow-sm">${i+1}</div>
-                        <div><h4 class="font-extrabold text-slate-800 dark:text-white text-sm">${s.nama}</h4><span class="text-[10px] text-slate-400 font-bold tracking-wider">${s.nisn}</span></div>
-                    </div>
-                    <div class="w-24 relative">
-					<input type="number" id="val_${i}" 
-						   min="0" max="100" step="1"
-						   inputmode="numeric"
-						   oninput="updateNilaiColor(this); calcLiveAvg()" 
-						   onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('val_${i+1}')?.focus(); }" 
-						   class="nilai-input w-full bg-slate-100 dark:bg-slate-800 border-2 border-transparent rounded-xl px-2 py-3 text-center font-black text-slate-800 dark:text-white focus:border-amber-500 outline-none transition-all text-lg shadow-inner" 
-						   placeholder="-">
-                    </div>
-                </div>`).join('');
-                l.innerHTML = html;
-            }
-        }
+			const k = document.getElementById('nilaiKelas').value;
+			const top = document.getElementById('nilaiTopik').value;
+			if(!k) return Swal.fire('Pilih Kelas', 'Silakan pilih kelas terlebih dahulu', 'warning');
+			if(!top) return Swal.fire('Isi Topik', 'Silakan isi Topik/Keterangan Penilaian.', 'warning');
+			
+			document.getElementById('nilaiListWrapper').classList.remove('hidden');
+			const l = document.getElementById('nilaiList');
+			l.innerHTML = getSkeletonLoading(5);
+			
+			const r = await apiCall('getStudents', {kelas: k, tanggal: '2025-01-01'});
+			
+			if(r.status === 'success') {
+				currentNilaiStudents = r.data;
+				
+				// Gabungan Header: Daftar Siswa + Peringatan Isi 0 + Rata Rata Live
+				let html = `
+				<div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 rounded-2xl mb-4 sticky top-4 z-40 flex flex-col gap-3 transition-all">
+					<div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
+						<span class="text-[11px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest"><i class="fa-solid fa-list-ul mr-1 text-amber-500"></i> Daftar Siswa</span>
+						<span class="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50 px-2 py-1 rounded-lg"><i class="fa-solid fa-circle-info mr-1"></i>Isi 0 jika kosong</span>
+					</div>
+					<div class="flex justify-between items-center">
+						<div class="flex items-center gap-2">
+							<div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-inner animate-pulse">
+								<i class="fa-solid fa-calculator text-xs"></i>
+							</div>
+							<span class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Rata-Rata<br>Kelas</span>
+						</div>
+						<div class="flex items-end gap-1">
+							<span id="liveAvg" class="text-3xl leading-none font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">0</span>
+							<span class="text-xs text-slate-400 font-bold mb-1">/ 100</span>
+						</div>
+					</div>
+				</div>`;
+				
+				// List Siswa dengan Tema Terang (Mirip Absen) & Kolom Input Diperlebar (w-24)
+				html += currentNilaiStudents.map((s, i) => `
+				<div class="bg-white dark:bg-[#0f172a] p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between gap-3 group">
+					
+					<div class="flex items-center gap-3 flex-1 min-w-0">
+						<div class="w-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-black text-xs border border-slate-200 dark:border-slate-700 shadow-inner group-hover:text-amber-500 transition-colors shrink-0">
+							${i+1}
+						</div>
+						<div class="flex-1 min-w-0">
+							<h4 class="font-black text-slate-800 dark:text-white text-sm truncate leading-tight group-hover:text-amber-500 transition-colors">${s.nama}</h4>
+							<span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase"><i class="fa-solid fa-id-card mr-1 text-orange-400"></i>${s.nisn}</span>
+						</div>
+					</div>
 
-        function updateNilaiColor(el) {
-            const val = parseInt(el.value);
-            el.classList.remove('bg-emerald-100', 'text-emerald-700', 'bg-amber-100', 'text-amber-700', 'bg-red-100', 'text-red-700', 'dark:bg-emerald-900/30', 'dark:bg-amber-900/30', 'dark:bg-red-900/30', 'dark:text-emerald-400', 'dark:text-amber-400', 'dark:text-red-400');
-            if(isNaN(val)) return;
-            if(val >= 85) el.classList.add('bg-emerald-100', 'text-emerald-700', 'dark:bg-emerald-900/30', 'dark:text-emerald-400');
-            else if(val >= 70) el.classList.add('bg-amber-100', 'text-amber-700', 'dark:bg-amber-900/30', 'dark:text-amber-400');
-            else el.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/30', 'dark:text-red-400');
-        }
+					<div class="w-24 shrink-0 relative group/input">
+						<div class="absolute inset-0 bg-amber-500/10 rounded-xl blur-sm opacity-0 group-focus-within/input:opacity-100 transition-opacity duration-300"></div>
+						<input type="number" id="val_${i}" 
+							min="0" max="100" step="1" inputmode="numeric"
+							oninput="updateNilaiColor(this); calcLiveNilaiStats()" 
+							onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('val_${i+1}')?.focus(); }" 
+							class="nilai-input relative w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-xl px-2 py-3 text-center font-black text-slate-800 dark:text-white focus:border-amber-500 focus:bg-white dark:focus:bg-[#1e293b] outline-none transition-all text-lg shadow-inner placeholder-slate-300 dark:placeholder-slate-600" 
+							placeholder="-">
+					</div>
+
+				</div>`).join('');
+				
+				l.innerHTML = html;
+				calcLiveNilaiStats(); // Hitung untuk pertama kali
+			}
+		}
+
+		// Update fungsi pewarnaan kotak agar nyambung dengan tema terang
+		function updateNilaiColor(el) {
+			const val = parseInt(el.value);
+			
+			// Hapus semua class warna lama
+			el.classList.remove('text-emerald-600', 'dark:text-emerald-400', 'border-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/20', 'shadow-[0_0_10px_rgba(16,185,129,0.2)]', 
+								'text-amber-600', 'dark:text-amber-400', 'border-amber-400', 'bg-amber-50', 'dark:bg-amber-900/20', 'shadow-[0_0_10px_rgba(245,158,11,0.2)]', 
+								'text-red-600', 'dark:text-red-400', 'border-red-400', 'bg-red-50', 'dark:bg-red-900/20', 'shadow-[0_0_10px_rgba(239,68,68,0.2)]', 
+								'text-slate-800', 'dark:text-white', 'border-slate-200', 'dark:border-slate-700', 'bg-slate-50', 'dark:bg-slate-900');
+								
+			if(isNaN(val)) {
+				el.classList.add('text-slate-800', 'dark:text-white', 'border-slate-200', 'dark:border-slate-700', 'bg-slate-50', 'dark:bg-slate-900');
+				return;
+			}
+			
+			// Warna Teks & Border Dinamis (Terang & Gelap)
+			if(val >= 85) el.classList.add('text-emerald-600', 'dark:text-emerald-400', 'border-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/20', 'shadow-[0_0_10px_rgba(16,185,129,0.2)]');
+			else if(val >= 70) el.classList.add('text-amber-600', 'dark:text-amber-400', 'border-amber-400', 'bg-amber-50', 'dark:bg-amber-900/20', 'shadow-[0_0_10px_rgba(245,158,11,0.2)]');
+			else el.classList.add('text-red-600', 'dark:text-red-400', 'border-red-400', 'bg-red-50', 'dark:bg-red-900/20', 'shadow-[0_0_10px_rgba(239,68,68,0.2)]');
+		}
+
+		// Fungsi Sakti: Menghitung Rata-rata sekaligus Cek Nilai Kosong/0
+		function calcLiveNilaiStats() {
+			const inputs = document.querySelectorAll('.nilai-input');
+			let total = 0; 
+			let countIsi = 0;
+			let countKosongAtauNol = 0;
+			
+			inputs.forEach(inp => { 
+				const v = parseInt(inp.value); 
+				if(!isNaN(v)) { 
+					total += v; 
+					countIsi++; 
+					if(v === 0) countKosongAtauNol++; // Dihitung peringatan jika diisi 0
+				} else {
+					countKosongAtauNol++; // Dihitung peringatan jika dibiarkan kosong
+				}
+			});
+			
+			// Update Angka Rata-rata
+			document.getElementById('liveAvg').innerText = countIsi > 0 ? Math.round(total/countIsi) : 0;
+			
+			// Logika Muncul/Hilangnya Peringatan Merah
+			const warnBox = document.getElementById('warningNilai');
+			const warnCount = document.getElementById('countBelumDinilai');
+			
+			if(warnBox && warnCount) {
+				if(countKosongAtauNol > 0) {
+					warnCount.innerText = countKosongAtauNol;
+					warnBox.classList.remove('hidden');
+				} else {
+					warnBox.classList.add('hidden');
+				}
+			}
+		}
 
         function calcLiveAvg() {
             const inputs = document.querySelectorAll('.nilai-input');
