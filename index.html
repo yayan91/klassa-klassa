@@ -854,6 +854,10 @@
 									</div>
 									<input type="hidden" id="rekapMode" value="kelas">
 									<select id="rekapKelas" onchange="loadSiswaForFilter()" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"><option value="">- Pilih Kelas -</option></select>
+									<select id="rekapModelTabel" class="w-full mt-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-sm font-black text-indigo-600 dark:text-indigo-400 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+										<option value="matriks">MODEL BARU (Matriks Harian)</option>
+										<option value="ringkasan">MODEL LAMA (Ringkasan Total)</option>
+									</select>
 									<select id="rekapSiswa" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm hidden"><option value="">- Pilih Siswa -</option></select>
 								</div>
 								<div class="space-y-4">
@@ -1043,7 +1047,7 @@
 </div>
 
 	<script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymv6CT5dyNjR7h2sWi_9CYVdpYk35dZCPqoE6w_D1Jy3W9Z_ZepW5EIibUyvXqI4ui/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxXc-jswO11By3x9eePD6ifpU2hvymu5l8k7mZnS7DQG8UH7WeVguGiFVi_X4hGVPn/exec'; 
         
         let currentUser=null, currentStudents=[], currentNilaiStudents=[], schoolInfo={}, dashboardData={}, myChart=null, myDoughnut=null;
         let chartNilaiBar=null, chartNilaiDonat=null; 
@@ -2126,8 +2130,13 @@
             const m=document.getElementById('rekapMode').value, k=document.getElementById('rekapKelas').value, s1=document.getElementById('rekapStart').value, s2=document.getElementById('rekapEnd').value;
             let fid=k; if(!k){Swal.fire('Pilih Kelas','','warning');return;} if(m==='siswa'){fid=document.getElementById('rekapSiswa').value; if(!fid){Swal.fire('Pilih Siswa','','warning');return;}}
             const r=await apiCall('getTeacherRecap',{mode:m,filterId:fid,startDate:s1,endDate:s2});
-            if(r.status==='success'&&r.data.length){globalReportData = {data:r.data, mode:m, k:k, s1:s1, s2:s2, fid:fid, type: 'absen'}; currentReportPage = 1; renderReportTable(); document.getElementById('rekapPreviewBox').classList.remove('hidden');} else Swal.fire('Data Kosong','','info');
-        }
+			if(r.status==='success'&&r.data.length){
+				const modelTabel = document.getElementById('rekapModelTabel').value;
+				globalReportData = {data:r.data, dates:r.activeDates, mode:m, k:k, s1:s1, s2:s2, fid:fid, type: 'absen', modelTabel: modelTabel}; 
+				currentReportPage = 1; renderReportTable(); 
+				document.getElementById('rekapPreviewBox').classList.remove('hidden');
+			}    	
+		}
         async function fetchNilaiReport() {
             const k = document.getElementById('rekapNilaiKelas').value; const m = document.getElementById('nilaiMode').value;
             if(!k) return Swal.fire('Pilih Kelas', '', 'warning');
@@ -2148,11 +2157,62 @@
             if(d.type === 'absen') {
                 const start=(currentReportPage-1)*reportRows, end=start+reportRows, pd=d.data.slice(start,end);
                 if(d.mode==='kelas'){
-                    document.getElementById('previewMeta').innerText = `ABSENSI KELAS: ${d.k}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Nama</th><th class="p-3 text-center">H</th><th class="p-3 text-center">S</th><th class="p-3 text-center">I</th><th class="p-3 text-center">A</th></tr>`;
-                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300">${r.nama}</td><td class="p-3 text-center text-green-600 font-bold bg-green-50 dark:bg-green-900/30 rounded-lg">${r.h}</td><td class="p-3 text-center text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 rounded-lg">${r.s}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50 dark:bg-blue-900/30 rounded-lg">${r.i}</td><td class="p-3 text-center text-red-600 font-bold bg-red-50 dark:bg-red-900/30 rounded-lg">${r.a}</td></tr>`);
+                    document.getElementById('previewMeta').innerText = `ABSENSI KELAS: ${d.k}`;
+                    let dateHeaders = '';
+                    if (d.dates && d.dates.length > 0) d.dates.forEach(dt => { dateHeaders += `<th class="p-2 text-center text-[11px]">${parseInt(dt.split('-')[2])}</th>`; });
+                    th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Nama</th><th class="p-2 text-center text-[11px]">L/P</th>${dateHeaders}<th class="p-3 text-center">H</th><th class="p-3 text-center">S</th><th class="p-3 text-center">I</th><th class="p-3 text-center">A</th></tr>`;
+                    pd.forEach((r,i)=>{
+                        let dateCells = '';
+                        if (d.dates && d.dates.length > 0) {
+                            d.dates.forEach(dt => {
+                                let stInit = r.daily && r.daily[dt] ? r.daily[dt] : '-';
+                                let colCls = stInit==='H'?'text-emerald-500':stInit==='S'?'text-amber-500':stInit==='I'?'text-blue-500':stInit==='A'?'text-red-500':'text-slate-300';
+                                dateCells += `<td class="p-2 text-center font-black ${colCls}">${stInit}</td>`;
+                            });
+                        }
+                        tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${r.nama}</td><td class="p-2 text-center font-bold text-slate-500">${r.jk||'-'}</td>${dateCells}<td class="p-3 text-center text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30">${r.h}</td><td class="p-3 text-center text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30">${r.s}</td><td class="p-3 text-center text-blue-600 font-bold bg-blue-50 dark:bg-blue-900/30">${r.i}</td><td class="p-3 text-center text-red-600 font-bold bg-red-50 dark:bg-red-900/30">${r.a}</td></tr>`;
+                    });
                 } else {
-                    const sn=document.getElementById('rekapSiswa'); document.getElementById('previewMeta').innerText = `ABSENSI SISWA: ${sn.options[sn.selectedIndex].text}`; th.innerHTML=`<tr><th class="p-3">No</th><th class="p-3">Tanggal</th><th class="p-3">Status</th><th class="p-3">Ket</th></tr>`;
-                    pd.forEach((r,i)=>tb.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-800"><td class="p-3 text-slate-500 dark:text-slate-400">${start+i+1}</td><td class="p-3 font-mono text-slate-600 dark:text-slate-400">${new Date(r.dateRaw).toLocaleDateString('id-ID')}</td><td class="p-3 font-bold text-slate-800 dark:text-slate-200">${r.status}</td><td class="p-3 italic text-slate-400">${r.keterangan||'-'}</td></tr>`);
+                    const sn = document.getElementById('rekapSiswa');
+                    const studentName = sn.options[sn.selectedIndex].text;
+
+                    // Logika Hitung Total dari seluruh data (bukan cuma yang di halaman ini)
+                    let tH=0, tS=0, tI=0, tA=0;
+                    globalReportData.data.forEach(r => {
+                        if(r.status === 'Hadir') tH++;
+                        else if(r.status === 'Sakit') tS++;
+                        else if(r.status === 'Izin') tI++;
+                        else if(r.status === 'Alpa') tA++;
+                    });
+
+                    // Menampilkan Nama dan Kotak Rekap di atas tabel pratinjau
+                    document.getElementById('previewMeta').innerHTML = `
+                        <div class="text-center mb-3">RIWAYAT ABSENSI: <span class="text-indigo-600 dark:text-indigo-400 font-black uppercase">${studentName}</span></div>
+                        <div class="flex justify-center gap-2 md:gap-4 mb-4 text-xs md:text-sm">
+                            <div class="px-3 md:px-5 py-2 rounded-lg font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">Hadir: ${tH}</div>
+                            <div class="px-3 md:px-5 py-2 rounded-lg font-bold bg-amber-50 text-amber-600 border border-amber-200">Sakit: ${tS}</div>
+                            <div class="px-3 md:px-5 py-2 rounded-lg font-bold bg-blue-50 text-blue-600 border border-blue-200">Izin: ${tI}</div>
+                            <div class="px-3 md:px-5 py-2 rounded-lg font-bold bg-red-50 text-red-600 border border-red-200">Alpa: ${tA}</div>
+                        </div>
+                    `;
+
+                    th.innerHTML = `<tr><th class="p-3 text-center">No</th><th class="p-3 text-left">Hari, Tanggal</th><th class="p-3 text-center">Status</th><th class="p-3 text-left">Keterangan</th></tr>`;
+                    pd.forEach((r, i) => {
+                        let stCls = r.status === 'Hadir' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30' : 
+                                    r.status === 'Sakit' ? 'text-amber-600 bg-amber-50 dark:bg-amber-900/30' : 
+                                    r.status === 'Izin' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/30' : 
+                                    'text-red-600 bg-red-50 dark:bg-red-900/30';
+                        
+                        const tglLengkap = new Date(r.dateRaw).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+                        
+                        tb.innerHTML += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700/50">
+                            <td class="p-3 text-center text-slate-500 dark:text-slate-400">${start + i + 1}</td>
+                            <td class="p-3 font-medium text-slate-700 dark:text-slate-300">${tglLengkap}</td>
+                            <td class="p-3 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${stCls}">${r.status}</span></td>
+                            <td class="p-3 text-slate-500 dark:text-slate-400">${r.keterangan || '-'}</td>
+                        </tr>`;
+                    });
                 }
                 document.getElementById('reportPageInfo').innerText = `${currentReportPage}/${Math.ceil(d.data.length/reportRows)}`;
             } else {
@@ -2296,119 +2356,177 @@
             const d = globalReportData;
             let finalContent = "";
             let judulLaporan = "LAPORAN REKAPITULASI ABSENSI";
+            
+            // Logika Nama Bulan & Tahun Dinamis (Mendukung Lintas Bulan/Tahun)
+            const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const m1 = new Date(d.s1);
+            const m2 = new Date(d.s2);
+            let textBulan = "";
+
+            if (m1.getMonth() === m2.getMonth() && m1.getFullYear() === m2.getFullYear()) {
+                // Jika hanya satu bulan
+                textBulan = `${namaBulan[m1.getMonth()]} ${m1.getFullYear()}`;
+            } else if (m1.getFullYear() === m2.getFullYear()) {
+                // Jika lintas bulan dalam tahun yang sama
+                textBulan = `${namaBulan[m1.getMonth()]} - ${namaBulan[m2.getMonth()]} ${m1.getFullYear()}`;
+            } else {
+                // Jika lintas tahun
+                textBulan = `${namaBulan[m1.getMonth()]} ${m1.getFullYear()} - ${namaBulan[m2.getMonth()]} ${m2.getFullYear()}`;
+            }
+
+            // Template Header Metadata (Kiri: Info Kelas, Kanan: Bulan)
+            const renderHeader = (infoKiri) => `
+                <table style="width: 100%; border: none !important; margin-bottom: 10px;">
+                    <tr style="border: none !important;">
+                        <td style="border: none !important; width: 60%; font-size: 10pt;">
+                            ${infoKiri}
+                        </td>
+                        <td style="border: none !important; width: 40%; text-align: right; vertical-align: top; font-size: 10pt;">
+							Bulan: <strong>${textBulan}</strong>
+						</td>
+                    </tr>
+                </table>`;
 
             if (d.mode === 'kelas') {
-                // Tampilan Rekap Kelas (Tabel Standar)
+                const infoKiri = `
+                    <table style="border: none !important; border-collapse: collapse; font-size: 10pt; width: 100%;">
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px; width: 60px;">Kelas</td>
+                            <td style="border: none !important; padding: 1px; width: 10px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${d.k}</strong></td>
+                        </tr>
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px;">Periode</td>
+                            <td style="border: none !important; padding: 1px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${new Date(d.s1).toLocaleDateString('id-ID')} s.d ${new Date(d.s2).toLocaleDateString('id-ID')}</strong></td>
+                        </tr>
+                    </table>
+                `;
+                
+                if (d.modelTabel === 'matriks') {
+                    // --- MODEL BARU (MATRIKS) ---
+                    let dateHeaders = d.dates.map(dt => `<th width="2%">${parseInt(dt.split('-')[2])}</th>`).join('');
+                    let rows = d.data.map((r, i) => {
+                        let dateCells = d.dates.map(dt => {
+                            let st = r.daily && r.daily[dt] ? r.daily[dt] : '';
+                            return `<td class="text-center" style="font-size: 7.5pt; ${st==='A'?'color:red;':''}">${st}</td>`;
+                        }).join('');
+                        return `<tr><td class="text-center">${i+1}</td><td style="white-space:nowrap;">${r.nama}</td><td class="text-center">${r.jk||'-'}</td>${dateCells}<td class="text-center font-bold">${r.h}</td><td class="text-center font-bold">${r.s}</td><td class="text-center font-bold">${r.i}</td><td class="text-center font-bold">${r.a}</td></tr>`;
+                    }).join('');
+
+                    finalContent = renderHeader(infoKiri) + `
+                        <table style="font-size: 7.5pt; width: 100%;">
+                            <thead>
+                                <tr><th>NO</th><th>NAMA SISWA</th><th>L/P</th>${dateHeaders}<th>H</th><th>S</th><th>I</th><th>A</th></tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>`;
+                } else {
+                    // --- MODEL LAMA (RINGKASAN) ---
+                    let rows = d.data.map((r, i) => `
+                        <tr><td class="text-center">${i+1}</td><td>${r.nama}</td><td class="text-center">${r.jk||'-'}</td><td class="text-center">${r.h}</td><td class="text-center">${r.s}</td><td class="text-center">${r.i}</td><td class="text-center font-bold">${r.a}</td></tr>`).join('');
+                    finalContent = renderHeader(infoKiri) + `
+                        <table>
+                            <thead><tr><th width="5%">NO</th><th>NAMA SISWA</th><th width="10%">L/P</th><th width="8%">H</th><th width="8%">S</th><th width="8%">I</th><th width="8%">A</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>`;
+                }
+            } else {
+                // --- LAPORAN RIWAYAT SISWA (PER SISWA) ---
+                judulLaporan = "LAPORAN RIWAYAT ABSENSI SISWA";
+                
+                const sn = document.getElementById('rekapSiswa');
+                const studentName = sn.options[sn.selectedIndex].text;
+                
+                const studentJkRaw = sn.options[sn.selectedIndex].getAttribute('data-jk');
+                const studentJk = (studentJkRaw === 'L') ? 'Laki-laki' : (studentJkRaw === 'P' ? 'Perempuan' : '-');
+
+                const infoKiri = `
+                    <table style="border: none !important; border-collapse: collapse; font-size: 10pt; width: 100%;">
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px; width: 100px;">Nama Siswa</td>
+                            <td style="border: none !important; padding: 1px; width: 10px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${studentName}</strong></td>
+                        </tr>
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px;">Jenis Kelamin</td>
+                            <td style="border: none !important; padding: 1px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${studentJk}</strong></td>
+                        </tr>
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px;">Kelas</td>
+                            <td style="border: none !important; padding: 1px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${d.k}</strong></td>
+                        </tr>
+                        <tr style="border: none !important;">
+                            <td style="border: none !important; padding: 1px;">Periode</td>
+                            <td style="border: none !important; padding: 1px;">:</td>
+                            <td style="border: none !important; padding: 1px;"><strong>${new Date(d.s1).toLocaleDateString('id-ID')} s.d ${new Date(d.s2).toLocaleDateString('id-ID')}</strong></td>
+                        </tr>
+                    </table>
+                `;
+
+                // --- LOGIKA HITUNG TOTAL REKAP INDIVIDU ---
+                let tH=0, tS=0, tI=0, tA=0;
+                d.data.forEach(r => {
+                    if(r.status === 'Hadir') tH++;
+                    else if(r.status === 'Sakit') tS++;
+                    else if(r.status === 'Izin') tI++;
+                    else if(r.status === 'Alpa') tA++;
+                });
+
+                // Tabel Rekap Kecil (Posisi Tengah)
+                const tabelRekapKecil = `
+                    <table style="width: 50%; margin: 10px auto 20px auto; border-collapse: collapse; text-align: center; font-size: 10pt;">
+                        <thead>
+                            <tr style="background-color: #f1f5f9;">
+                                <th style="border: 1px solid #000; padding: 4px;">HADIR</th>
+                                <th style="border: 1px solid #000; padding: 4px;">SAKIT</th>
+                                <th style="border: 1px solid #000; padding: 4px;">IZIN</th>
+                                <th style="border: 1px solid #000; padding: 4px;">ALPA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">${tH}</td>
+                                <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">${tS}</td>
+                                <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">${tI}</td>
+                                <td style="border: 1px solid #000; padding: 6px; font-weight: bold; color: red;">${tA}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                
                 let rows = d.data.map((r, i) => {
-                    let jkFull = (r.jk === 'L') ? 'Laki-laki' : (r.jk === 'P' ? 'Perempuan' : '-');
+                    const tglLengkap = new Date(r.dateRaw).toLocaleDateString('id-ID', { 
+                        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' 
+                    });
                     return `
                     <tr>
                         <td class="text-center">${i + 1}</td>
-                        <td>${r.nama}</td>
-                        <td class="text-center">${jkFull}</td>
-                        <td class="text-center">${r.h}</td>
-                        <td class="text-center">${r.s}</td>
-                        <td class="text-center">${r.i}</td>
-                        <td class="text-center font-bold">${r.a}</td>
+                        <td class="text-center">${tglLengkap}</td>
+                        <td class="text-center">${r.status}</td>
+                        <td>${r.keterangan || '-'}</td>
                     </tr>`;
                 }).join('');
-
-                finalContent = `
-                    <div style="margin-bottom: 10px;">
-                        Kelas: <strong>${d.k}</strong><br>
-                        Periode: <strong>${new Date(d.s1).toLocaleDateString('id-ID')} s.d ${new Date(d.s2).toLocaleDateString('id-ID')}</strong>
-                    </div>
+                
+                finalContent = renderHeader(infoKiri) + tabelRekapKecil + `
                     <table>
                         <thead>
-                            <tr><th width="5%">NO</th><th>NAMA SISWA</th><th width="15%">L/P</th><th width="8%">H</th><th width="8%">S</th><th width="8%">I</th><th width="8%">A</th></tr>
+                            <tr>
+                                <th width="5%">NO</th>
+                                <th width="30%">HARI, TANGGAL</th>
+                                <th width="20%">STATUS</th>
+                                <th>KETERANGAN</th>
+                            </tr>
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>`;
-            } else {
-                // --- TAMPILAN PER SISWA (MEWAH) ---
-                const sn = document.getElementById('rekapSiswa');
-                const studentName = sn.options[sn.selectedIndex].text;
-                const studentJkRaw = sn.options[sn.selectedIndex].getAttribute('data-jk');
-                const studentJk = (studentJkRaw === 'L') ? 'Laki-laki' : (studentJkRaw === 'P' ? 'Perempuan' : '-');
-                judulLaporan = "LAPORAN RIWAYAT ABSENSI SISWA";
-
-                // 1. Hitung Total
-                let tH = 0, tS = 0, tI = 0, tA = 0;
-                d.data.forEach(r => {
-                    if (r.status === 'Hadir') tH++;
-                    else if (r.status === 'Sakit') tS++;
-                    else if (r.status === 'Izin') tI++;
-                    else if (r.status === 'Alpa') tA++;
-                });
-
-                // 2. Buat Konten (Info Siswa & Ringkasan Kolom)
-                finalContent = `
-                    <div style="margin-bottom: 20px;">
-                        <table style="width: 100%; border: none !important; margin-bottom: 20px;">
-                            <tr style="border: none !important;">
-                                <td style="border: none !important; padding: 2px; width: 120px;">Nama Siswa</td>
-                                <td style="border: none !important; padding: 2px; width: 10px;">:</td>
-                                <td style="border: none !important; padding: 2px;"><strong>${studentName}</strong></td>
-                            </tr>
-                            <tr style="border: none !important;">
-                                <td style="border: none !important; padding: 2px;">Jenis Kelamin</td>
-                                <td style="border: none !important; padding: 2px;">:</td>
-                                <td style="border: none !important; padding: 2px;"><strong>${studentJk}</strong></td>
-                            </tr>
-                            <tr style="border: none !important;">
-                                <td style="border: none !important; padding: 2px;">Kelas</td>
-                                <td style="border: none !important; padding: 2px;">:</td>
-                                <td style="border: none !important; padding: 2px;"><strong>${d.k}</strong></td>
-                            </tr>
-                            <tr style="border: none !important;">
-                                <td style="border: none !important; padding: 2px;">Periode Laporan</td>
-                                <td style="border: none !important; padding: 2px;">:</td>
-                                <td style="border: none !important; padding: 2px;"><strong>${new Date(d.s1).toLocaleDateString('id-ID')} s.d ${new Date(d.s2).toLocaleDateString('id-ID')}</strong></td>
-                            </tr>
-                        </table>
-
-                        <table style="width: auto; margin-bottom: 20px; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="padding: 5px 15px; border: 1px solid #000;">HADIR</th>
-                                    <th style="padding: 5px 15px; border: 1px solid #000;">SAKIT</th>
-                                    <th style="padding: 5px 15px; border: 1px solid #000;">IZIN</th>
-                                    <th style="padding: 5px 15px; border: 1px solid #000; color: red;">ALPA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="text-center" style="border: 1px solid #000; padding: 8px;"><strong>${tH}</strong></td>
-                                    <td class="text-center" style="border: 1px solid #000; padding: 8px;"><strong>${tS}</strong></td>
-                                    <td class="text-center" style="border: 1px solid #000; padding: 8px;"><strong>${tI}</strong></td>
-                                    <td class="text-center" style="border: 1px solid #000; padding: 8px; color: red;"><strong>${tA}</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th width="5%">NO</th>
-                                    <th width="40%">TANGGAL / HARI</th>
-                                    <th width="15%">STATUS</th>
-                                    <th>KETERANGAN</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${d.data.map((r, i) => `
-                                    <tr>
-                                        <td class="text-center">${i + 1}</td>
-                                        <td>${new Date(r.dateRaw).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</td>
-                                        <td class="text-center"><strong>${r.status}</strong></td>
-                                        <td>${r.keterangan || '-'}</td>
-                                    </tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
             }
 
-            bukaJendelaCetak(judulLaporan, finalContent);
+            // Orientasi Otomatis
+            let orientasi = (d.mode === 'kelas' && d.modelTabel === 'matriks') ? 'landscape' : 'potrait';
+            bukaJendelaCetak(judulLaporan, finalContent, orientasi);
         }
 
         async function generateNilaiPDF(){
