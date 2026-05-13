@@ -1043,7 +1043,7 @@
 </div>
 
 	<script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZX_tjI475zmVW8WwUFwa5j81avlZhbGevz41hDfHvLScvOhKfe1K64_Ci7FnQ9z7S/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymv6CT5dyNjR7h2sWi_9CYVdpYk35dZCPqoE6w_D1Jy3W9Z_ZepW5EIibUyvXqI4ui/exec'; 
         
         let currentUser=null, currentStudents=[], currentNilaiStudents=[], schoolInfo={}, dashboardData={}, myChart=null, myDoughnut=null;
         let chartNilaiBar=null, chartNilaiDonat=null; 
@@ -2120,7 +2120,7 @@
             document.getElementById('filterNilaiJenis').classList.toggle('hidden', m !== 'detail');
             document.getElementById('filterNilaiSiswa').classList.toggle('hidden', m !== 'siswa');
         }
-        async function loadSiswaForFilter(){const k=document.getElementById('rekapKelas').value;if(!k||document.getElementById('rekapMode').value!=='siswa')return;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('rekapSiswa').innerHTML=o;}}
+        async function loadSiswaForFilter(){const k=document.getElementById('rekapKelas').value;if(!k||document.getElementById('rekapMode').value!=='siswa')return;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}" data-jk="${s.jk}">${s.nama}</option>`);document.getElementById('rekapSiswa').innerHTML=o;}}
         async function loadSiswaForNilai(){const k=document.getElementById('rekapNilaiKelas').value;const r=await apiCall('getStudents',{kelas:k,tanggal:'2025-01-01'});if(r.status==='success'){let o='<option value="">- Pilih Siswa -</option>';r.data.forEach(s=>o+=`<option value="${s.nisn}">${s.nama}</option>`);document.getElementById('filterNilaiSiswa').innerHTML=o;}}
         async function fetchReportData(){
             const m=document.getElementById('rekapMode').value, k=document.getElementById('rekapKelas').value, s1=document.getElementById('rekapStart').value, s2=document.getElementById('rekapEnd').value;
@@ -2299,15 +2299,19 @@
 
             if (d.mode === 'kelas') {
                 // Tampilan Rekap Kelas (Tabel Standar)
-                let rows = d.data.map((r, i) => `
+                let rows = d.data.map((r, i) => {
+                    let jkFull = (r.jk === 'L') ? 'Laki-laki' : (r.jk === 'P' ? 'Perempuan' : '-');
+                    return `
                     <tr>
                         <td class="text-center">${i + 1}</td>
                         <td>${r.nama}</td>
+                        <td class="text-center">${jkFull}</td>
                         <td class="text-center">${r.h}</td>
                         <td class="text-center">${r.s}</td>
                         <td class="text-center">${r.i}</td>
                         <td class="text-center font-bold">${r.a}</td>
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
 
                 finalContent = `
                     <div style="margin-bottom: 10px;">
@@ -2316,7 +2320,7 @@
                     </div>
                     <table>
                         <thead>
-                            <tr><th width="5%">NO</th><th>NAMA SISWA</th><th width="8%">H</th><th width="8%">S</th><th width="8%">I</th><th width="8%">A</th></tr>
+                            <tr><th width="5%">NO</th><th>NAMA SISWA</th><th width="15%">L/P</th><th width="8%">H</th><th width="8%">S</th><th width="8%">I</th><th width="8%">A</th></tr>
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>`;
@@ -2324,6 +2328,8 @@
                 // --- TAMPILAN PER SISWA (MEWAH) ---
                 const sn = document.getElementById('rekapSiswa');
                 const studentName = sn.options[sn.selectedIndex].text;
+                const studentJkRaw = sn.options[sn.selectedIndex].getAttribute('data-jk');
+                const studentJk = (studentJkRaw === 'L') ? 'Laki-laki' : (studentJkRaw === 'P' ? 'Perempuan' : '-');
                 judulLaporan = "LAPORAN RIWAYAT ABSENSI SISWA";
 
                 // 1. Hitung Total
@@ -2343,6 +2349,11 @@
                                 <td style="border: none !important; padding: 2px; width: 120px;">Nama Siswa</td>
                                 <td style="border: none !important; padding: 2px; width: 10px;">:</td>
                                 <td style="border: none !important; padding: 2px;"><strong>${studentName}</strong></td>
+                            </tr>
+                            <tr style="border: none !important;">
+                                <td style="border: none !important; padding: 2px;">Jenis Kelamin</td>
+                                <td style="border: none !important; padding: 2px;">:</td>
+                                <td style="border: none !important; padding: 2px;"><strong>${studentJk}</strong></td>
                             </tr>
                             <tr style="border: none !important;">
                                 <td style="border: none !important; padding: 2px;">Kelas</td>
@@ -2895,13 +2906,23 @@
 		
 		// Header Kop Surat Standar Times New Roman
 		const kopSurat = `
-			<div style="text-align: center; font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.2; margin-bottom: 0;">
-				<div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH KOTA MAKASSAR</div>
-				<div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">DINAS PENDIDIKAN</div>
-				<div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-top: 2px;">UPT SPF SMP NEGERI 16 MAKASSAR</div>
-				<div style="font-size: 10pt; font-style: italic; margin-top: 2px;">Alamat: Jl. Goa Ria Bakung, Kec. Biringkanaya, Kota Makassar, Sulawesi Selatan</div>
-				<div style="border-bottom: 4px double #000; height: 2px; margin-top: 10px; margin-bottom: 20px;"></div>
-			</div>
+			<table style="width: 100%; border: none !important; margin-bottom: 0;">
+				<tr style="border: none !important;">
+					<td style="border: none !important; width: 15%; text-align: left; vertical-align: middle;">
+						<img src="https://lh3.googleusercontent.com/u/0/d/1lxB2aQC5H-bnz7OlwnpmC9dl2Z3RERwI" style="width: 80px; height: auto;">
+					</td>
+					<td style="border: none !important; width: 70%; text-align: center; vertical-align: middle; font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.2;">
+						<div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">PEMERINTAH KOTA MAKASSAR</div>
+						<div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">DINAS PENDIDIKAN</div>
+						<div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-top: 2px;">UPT SPF SMP NEGERI 16 MAKASSAR</div>
+						<div style="font-size: 8pt; font-style: italic; margin-top: 2px;">Alamat: Jl. Goa Ria Bakung, Kec. Biringkanaya, Kota Makassar, Sulawesi Selatan</div>
+					</td>
+					<td style="border: none !important; width: 15%; text-align: right; vertical-align: middle;">
+						<img src="https://lh3.googleusercontent.com/d/1jA8C9RLNHSxlumS1NfyIrNTi3VHv7N-u" style="width: 80px; height: auto;">
+					</td>
+				</tr>
+			</table>
+			<div style="border-bottom: 4px double #000; height: 2px; margin-top: 10px; margin-bottom: 20px;"></div>
 		`;
 
 		// Area Tanda Tangan (Hanya Guru yang Login)
@@ -2934,7 +2955,7 @@
 					.font-bold { font-weight: bold; }
 				</style>
 			</head>
-			<body onload="setTimeout(function(){ window.print(); window.close(); }, 700)">
+			<body onload="setTimeout(function(){ window.print(); window.close(); }, 1500)">
 				${kopSurat}
 				<div class="judul-dokumen">${judul}</div>
 				${htmlContent}
