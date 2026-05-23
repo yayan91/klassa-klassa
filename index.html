@@ -3017,7 +3017,7 @@
     }
 	
 	// ==========================================
-	// FUNGSI CETAK MEWAH UNIVERSAL - BY MUHAMMAD HASRATUL
+	// FUNGSI CETAK MEWAH UNIVERSAL - BY MUHAMMAD HASRATUL (UPDATED)
 	// ==========================================
 	function bukaJendelaCetak(judul, htmlContent, orientasi = 'potrait') {
 		const win = window.open('', '_blank');
@@ -3062,7 +3062,10 @@
 				<title>Cetak - ${judul}</title>
 				<style>
 					@page { size: A4 ${orientasi}; margin: 1.5cm 2cm; }
-					body { font-family: "Times New Roman", Times, serif; font-size: 11pt; color: #000; line-height: 1.5; background: #fff; }
+					
+					/* Tambahan padding-top agar teks tidak tertutup tombol di layar */
+					body { font-family: "Times New Roman", Times, serif; font-size: 11pt; color: #000; line-height: 1.5; background: #fff; padding-top: 60px; }
+					
 					.judul-dokumen { text-align: center; font-weight: bold; text-transform: uppercase; text-decoration: underline; margin-bottom: 15px; font-size: 12pt; }
 					table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11pt; }
 					table, th, td { border: 1px solid #000; }
@@ -3071,9 +3074,43 @@
 					.text-center { text-align: center; }
 					.text-right { text-align: right; }
 					.font-bold { font-weight: bold; }
+
+					/* --- DESAIN TOMBOL CETAK DI LAYAR --- */
+					.btn-cetak {
+						position: fixed;
+						top: 0;
+						left: 0;
+						width: 100%;
+						background-color: #f97316; /* Warna orange khas Klassa */
+						color: #ffffff;
+						text-align: center;
+						padding: 15px;
+						font-family: 'Plus Jakarta Sans', sans-serif;
+						font-size: 14px;
+						font-weight: 800;
+						text-transform: uppercase;
+						letter-spacing: 1px;
+						border: none;
+						cursor: pointer;
+						z-index: 9999;
+						box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+					}
+					.btn-cetak:active {
+						background-color: #ea580c;
+					}
+
+					/* --- ATURAN KHUSUS SAAT DICETAK/DIUNDUH --- */
+					@media print {
+						/* Sembunyikan tombol cetak agar tidak ikut masuk ke PDF */
+						.btn-cetak { display: none !important; }
+						/* Hilangkan jarak kosong di atas kertas */
+						body { padding-top: 0 !important; }
+					}
 				</style>
 			</head>
-			<body onload="setTimeout(function(){ window.print(); window.close(); }, 1500)">
+			<body>
+				<button class="btn-cetak" onclick="window.print()">🖨️ Klik di Sini untuk Cetak / Simpan ke PDF</button>
+
 				${kopSurat}
 				<div class="judul-dokumen">${judul}</div>
 				${htmlContent}
